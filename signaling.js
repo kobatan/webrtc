@@ -16,9 +16,9 @@ wsServer.on("connection", function (ws) {
           }
       });
   });
+  ws.on("close", function () {
+      console.log("-- websocket closed --");
+  });
 });
 
-wsServer.on('close', function() {
-  consol.log('-- websocket closed --');
-});
 
