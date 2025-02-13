@@ -9,7 +9,7 @@ wsServer.on('connection', function(ws) {
   console.log('-- websocket connected --');
   ws.on('message', function(message) {
     wsServer.clients.forEach(function each(client) {
-      if (isSame(ws, client)) {
+      if (ws === client) {
         console.log('- skip sender -');
       }
       else {
@@ -18,9 +18,3 @@ wsServer.on('connection', function(ws) {
     });
   });
 });
- 
-function isSame(ws1, ws2) {
-  // -- compare object --
-  return (ws1 === ws2);     
-}
-

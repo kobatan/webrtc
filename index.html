@@ -112,7 +112,7 @@
     }
   }
   
-  function getDeviceStream(option) {
+  function getDeviceStream(option) {      // 接続されているカメラ、マイクのストリームを取得する
     if ('getUserMedia' in navigator.mediaDevices) {
       console.log('navigator.mediaDevices.getUserMadia');
       return navigator.mediaDevices.getUserMedia(option);
@@ -128,7 +128,7 @@
     }
   }
 
-  function playVideo(element, stream) {
+  function playVideo(element, stream) { // video要素にストリームを流し込む
     if ('srcObject' in element) {
       element.srcObject = stream;
     }
@@ -139,7 +139,7 @@
     element.volume = 0;
   }
 
-  function pauseVideo(element) {
+  function pauseVideo(element) {  // video要素のストリームを停止する
     element.pause();
     if ('srcObject' in element) {
       element.srcObject = null;
@@ -153,23 +153,23 @@
   }
 
   // ----- hand signaling ----
-  function onSdpText() {
+  function onSdpText() {  // SDPを受信したときの処理
     let text = textToReceiveSdp.value;
-    if (peerConnection) {
+    if (peerConnection) { // answerの場合
       console.log('Received answer text...');
       let answer = new RTCSessionDescription({
         type : 'answer',
         sdp : text,
       });
-      setAnswer(answer);
+      setAnswer(answer);  // answer SDPをセットする
     }
-    else {
+    else {  // offerの場合
       console.log('Received offer text...');
       let offer = new RTCSessionDescription({
         type : 'offer',
         sdp : text,
       });
-      setOffer(offer);
+      setOffer(offer);  // offer SDPをセットする
     }
     textToReceiveSdp.value ='';
   }
@@ -185,6 +185,7 @@
 
     let message = JSON.stringify(sessionDescription);
     console.log('sending SDP=' + message);
+    ws.sendSdp = true;   
     ws.send(message);
   }
 
@@ -197,28 +198,28 @@
   }
 
   // ---------------------- connection handling -----------------------
-  function prepareNewConnection() {
+  function prepareNewConnection() { // RTCPeerConnectionを生成する
     let pc_config = {"iceServers":[]};
     let peer = new RTCPeerConnection(pc_config);
 
     // --- on get remote stream ---
-    if ('ontrack' in peer) {
+    if ('ontrack' in peer) {  
       peer.ontrack = function(event) {
         console.log('-- peer.ontrack()');
         let stream = event.streams[0];
-        playVideo(remoteVideo, stream);
+        playVideo(remoteVideo, stream); // video要素にストリームを流し込む
       };
     }
     else {
       peer.onaddstream = function(event) {
         console.log('-- peer.onaddstream()');
         let stream = event.stream;
-        playVideo(remoteVideo, stream);
+        playVideo(remoteVideo, stream); // video要素にストリームを流し込む
       };
     }
 
     // --- on get local ICE candidate
-    peer.onicecandidate = function (evt) {
+    peer.onicecandidate = function (evt) {  // ICE candidateを取得したときの処理
       if (evt.candidate) {
         console.log(evt.candidate);
 
@@ -285,7 +286,7 @@
   }
 
   function makeOffer() {
-    peerConnection = prepareNewConnection();
+    peerConnection = prepareNewConnection();  // RTCPeerConnectionを生成する
     peerConnection.createOffer()
     .then(function (sessionDescription) {
       console.log('createOffer() succsess in promise');
