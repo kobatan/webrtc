@@ -6,45 +6,21 @@ const token = new SkyWayAuthToken({
   jti: uuidV4(),
   iat: nowInSec(),
   exp: nowInSec() + 60 * 60 * 24,
+  version: 3,
   scope: {
-      app: {
-      id: "af466ae1-3762-476f-9fb6-11b8da001618", // SkyWayのアプリケーションID
-      turn: true,
-      actions: ['read'],
-      channels: [
-          {
-          id: '*',
-          name: '*',
-          actions: ['write'],
-          members: [
-              {
-              id: '*',
-              name: '*',
-              actions: ['write'],
-              publication: {
-                  actions: ['write'],
-              },
-              subscription: {
-                  actions: ['write'],
-              },
-              },
-          ],
-  
-          sfuBots: [
-              {
-              actions: ['write'],
-              forwardings: [
-                  {
-                  actions: ['write'],
-                  },
-              ],
-              },
-          ],
-          },
-      ],
+    appId: "af466ae1-3762-476f-9fb6-11b8da001618",
+    rooms: [
+      {
+        name: "*",
+        methods: ["create", "close", "updateMetadata"],
+        member: {
+          name: "*",
+          methods: ["publish", "subscribe", "updateMetadata"],
+        },
       },
+    ],
   },
-  }).encode("TgUPJ9P/ceQBSBzSV5vmieIVHJ9jtjaScn9w29PrxAE=");  // SkyWayのシークレットキー
+}).encode("TgUPJ9P/ceQBSBzSV5vmieIVHJ9jtjaScn9w29PrxAE=");
 
 document.addEventListener('DOMContentLoaded', function() {
     const videoToggle = document.getElementById('videoToggle');
@@ -105,7 +81,7 @@ joinButton.onclick = async () => {
       subscribeButton.id = `subscribe-button-${publication.id}`;
       subscribeButton.textContent = `${publication.publisher.id}: ${publication.contentType}`;
       
-      buttonArea.appendChild(subscribeButton);
+      buttonArea.appendChild(subscribeButton);  // ボタン追加
 
       subscribeButton.onclick = async () => { // 購読ボタンが押された時の処理
         const { stream } = await me.subscribe(publication.id);  // 購読
