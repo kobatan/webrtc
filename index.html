@@ -1,27 +1,171 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
- <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>home Cam</title> 
-  <style>
-    body{color:#fff;background-color:#000;margin:0;padding:0}
-    #video{object-fit:contain;width:auto;height:90%}
-    #audio{width:100%;height:100px;display:none}
-  </style>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>SkyWay Tutorial</title>
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        p {
+            color: #555;
+        }
+
+        #my-id {
+            background-color: #8bc34a;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        input[type=text], button {
+            padding: 10px;
+            margin: 5px 0;
+        }
+
+        input[type=text] {
+            width: 70%;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 0 15px -4px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            background-color: #8bc34a;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #689f38;
+        }
+
+        .video-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        #local-video {
+            border: 8px solid #8bc34a;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 400px;
+            margin-top: 20px;
+        }
+
+        .channel-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+        }
+
+        .switch input { 
+        opacity: 0;
+        width: 0;
+        height: 0;
+        }
+
+        .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+        }
+
+        .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        }
+
+        input:checked + .slider {
+        background-color:  #8bc34a;;
+        }
+
+        input:focus + .slider {
+        box-shadow: 0 0 1px  #8bc34a;;
+        }
+
+        input:checked + .slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(26px);
+        }
+
+        .slider.round {
+        border-radius: 34px;
+        }
+
+        .slider.round:before {
+        border-radius: 50%;
+        }
+    </style>
 </head>
+
 <body>
-  <p>ID:af466ae1-3762-476f-9fb6-11b8da001618 <span id="'my-id"></span></p>
-  <div>
-    channel name: <input id="channel-name" type="text" />
-    <button id="join">join</button>
-  </div>
-  <video id="local-video" width="400px" muted playsinline></video>
-  <div>
-    write dataStream: <input id="data-stream" type="text" />
-    <button id="write">write</button>
-  </div>
-  <div id="button-area"></div>
-  <div id="remote-media-area"></div>
-  <script type="module" src="main.js"></script>
+    
+    <div class="container">
+        <h1>見守りアプリ</h1>
+        <p>ID: <span id="my-id">Your ID</span></p>
+        <div class="channel-group">
+            <input id="channel-name" type="text" placeholder="キーワード" />
+            <button id="join">参加</button>
+        </div>
+
+        <label class="switch">
+            <input type="checkbox" id="videoToggle">
+            <span class="slider round"></span>
+        </label>
+        
+        <p id="status">カメラ OFF</p>
+        <video id="local-video" muted playsinline style="display: none;"></video>
+
+        <div id="remote-media-area"></div>
+
+        <div>
+            <input id="data-stream" type="text" placeholder="メッセージ" />
+            <button id="write">送信</button>
+        </div>
+
+        <div id="button-area"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@skyway-sdk/room/dist/skyway_room-latest.js"></script>
+    <script type="module" src="main.js"></script>
 </body>
+
 </html>
