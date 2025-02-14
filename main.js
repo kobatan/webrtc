@@ -7,7 +7,7 @@ iat: nowInSec(),
 exp: nowInSec() + 60 * 60 * 24,
 scope: {
     app: {
-    id: "アプリケーションID",
+    id: "af466ae1-3762-476f-9fb6-11b8da001618",
     turn: true,
     actions: ['read'],
     channels: [
@@ -43,7 +43,7 @@ scope: {
     ],
     },
 },
-}).encode("シークレットキー");
+}).encode("TgUPJ9P/ceQBSBzSV5vmieIVHJ9jtjaScn9w29PrxAE=");
 
 document.addEventListener('DOMContentLoaded', function() {
     const videoToggle = document.getElementById('videoToggle');
