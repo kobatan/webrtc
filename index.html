@@ -67,6 +67,7 @@
             width: 100%;
             max-width: 400px;
             margin-top: 20px;
+            display: none;
         }
 
         .channel-group {
@@ -145,12 +146,11 @@
         </div>
 
         <label class="switch">
-            <input type="checkbox" id="videoToggle">
+            <input type="checkbox" id="videoToggle" title="Toggle Video">
             <span class="slider round"></span>
         </label>
         
-        <p id="status">カメラ OFF</p>
-        <video id="local-video" muted playsinline style="display: none;"></video>
+        <video id="local-video" muted></video>
 
         <div id="remote-media-area"></div>
 
