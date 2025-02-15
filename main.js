@@ -23,20 +23,20 @@ const token = new SkyWayAuthToken({
 }).encode("TgUPJ9P/ceQBSBzSV5vmieIVHJ9jtjaScn9w29PrxAE=");
 
 document.addEventListener('DOMContentLoaded', function() {
-    const videoToggle = document.getElementById('videoToggle');
-    const localVideo = document.getElementById('local-video');
-    const status = document.getElementById('status');
+  const videoToggle = document.getElementById('videoToggle');
+  const localVideo = document.getElementById('local-video');
+  const status = document.getElementById('status');
     
-    videoToggle.addEventListener('change', function() {
-      if (this.checked) {
-        localVideo.style.display = 'block';
-        status.textContent = 'カメラ ON';
-      } else {
-        localVideo.style.display = 'none';
-        status.textContent = 'カメラ OFF';
-      }
-    });
+  videoToggle.addEventListener('change', function() {
+    if (this.checked) {
+      localVideo.style.display = 'block';
+      status.textContent = 'カメラ ON';
+    } else {
+      localVideo.style.display = 'none';
+      status.textContent = 'カメラ OFF';
+    }
   });
+});
  
 
 (async () => {
@@ -44,20 +44,12 @@ const localVideo = document.getElementById('local-video');
 const buttonArea = document.getElementById('button-area');
 const remoteMediaArea = document.getElementById('remote-media-area');
 const roomNameInput = document.getElementById('room-name');
-const dataStreamInput = document.getElementById('data-stream');
 const myId = document.getElementById('my-id');
 const joinButton = document.getElementById('join');
-const writeButton = document.getElementById('write');
 
 const { audio, video } = await SkyWayStreamFactory.createMicrophoneAudioAndCameraStream();  // マイクとカメラのストリームを取得
 video.attach(localVideo); // ローカルビデオにカメラのストリームをアタッチ
 await localVideo.play();  // ローカルビデオを再生
-
-const data = await SkyWayStreamFactory.createDataStream();
-writeButton.onclick = () => {
-    data.write(dataStreamInput.value);
-    dataStreamInput.value = '';
-};
 
 joinButton.onclick = async () => {
     if (roomNameInput.value === '') return;
@@ -72,7 +64,6 @@ joinButton.onclick = async () => {
 
     await me.publish(audio);  // マイクのストリームを公開
     await me.publish(video);  // カメラのストリームを公開
-    await me.publish(data);   // データストリームを公開
     
     const subscribeAndAttach = (publication) => { // 受信した（購読）時の処理
     if (publication.publisher.id === me.id) return; // 自分の発行したものは無視
@@ -85,39 +76,28 @@ joinButton.onclick = async () => {
 
       subscribeButton.onclick = async () => { // 購読ボタンが押された時の処理
         const { stream } = await me.subscribe(publication.id);  // 購読
-
-        switch (stream.contentType) {
-          case 'video': // videoの場合
-            {
-            const elm = document.createElement('video');
-            elm.playsInline = true;
-            elm.autoplay = true;
-            stream.attach(elm);
-            remoteMediaArea.appendChild(elm);
-            }
+        let newMedia;
+        switch (stream.track.kind) {
+          case "video":
+            newMedia = document.createElement("video");
+            newMedia.playsInline = true;
+            newMedia.autoplay = true;
             break;
-          case 'audio': // audioの場合
-            {
-            const elm = document.createElement('audio');
-            elm.controls = true;
-            elm.autoplay = true;
-            stream.attach(elm);
-            remoteMediaArea.appendChild(elm);
-            }
+          case "audio":
+            newMedia = document.createElement("audio");
+            newMedia.controls = true;
+            newMedia.autoplay = true;
             break;
-          case 'data': {  // dataの場合
-            const elm = document.createElement('div');
-            remoteMediaArea.appendChild(elm);
-            elm.innerText = 'data\n';
-            stream.onData.add((data) => {
-            elm.innerText += data + '\n';
-            });
-          }
+          default:
+            return;
         }
+        newMedia.id = `media-${publication.id}`;
+        stream.attach(newMedia);
+        remoteMediaArea.appendChild(newMedia);
       };
     };
 
-    room.publications.forEach(subscribeAndAttach);
-    room.onStreamPublished.add((e) => subscribeAndAttach(e.publication));
+    room.publications.forEach(subscribeAndAttach);  // 購読したものを公開する
+    room.onStreamPublished.add((e) => subscribeAndAttach(e.publication)); // 公開した時の処理を追加
   };
 });
