@@ -1,163 +1,284 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>SkyWay Tutorial</title>
-    <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .container {
-            text-align: center;
-        }
-
-        p {
-            color: #555;
-        }
-
-        #my-id {
-            background-color: #8bc34a;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-
-        input[type=text], button {
-            padding: 10px;
-            margin: 5px 0;
-        }
-
-        input[type=text] {
-            width: 70%;
-            border: none;
-            border-radius: 5px;
-            box-shadow: 0 0 15px -4px rgba(0, 0, 0, 0.1);
-        }
-
-        button {
-            background-color: #8bc34a;
-            border: none;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #689f38;
-        }
-
-        .video-container {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-        }
-
-        #local-video {
-            border: 8px solid #8bc34a;
-            border-radius: 5px;
-            width: 100%;
-            max-width: 400px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .channel-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        .switch {
-        position: relative;
-        display: inline-block;
-        width: 60px;
-        height: 34px;
-        }
-
-        .switch input { 
-        opacity: 0;
-        width: 0;
-        height: 0;
-        }
-
-        .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #ccc;
-        -webkit-transition: .4s;
-        transition: .4s;
-        }
-
-        .slider:before {
-        position: absolute;
-        content: "";
-        height: 26px;
-        width: 26px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        -webkit-transition: .4s;
-        transition: .4s;
-        }
-
-        input:checked + .slider {
-        background-color:  #8bc34a;
-        }
-
-        input:focus + .slider {
-        box-shadow: 0 0 1px  #8bc34a;
-        }
-
-        input:checked + .slider:before {
-        -webkit-transform: translateX(26px);
-        -ms-transform: translateX(26px);
-        transform: translateX(26px);
-        }
-
-        .slider.round {
-        border-radius: 34px;
-        }
-
-        .slider.round:before {
-        border-radius: 50%;
-        }
-    </style>
+<!doctype html>
+<html lang="en">
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://unpkg.com/mqtt@4.1.0/dist/mqtt.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.2/dist/zephyr/bootstrap.min.css">
+  <title>libpeer test</title>
+<style>
+</style>
 </head>
-
 <body>
-    <div class="container">
-        <h1>見守りカメラ</h1>
-        <p>ID: <span id="my-id">Your ID</span></p>
-        <div class="channel-group">
-            <input id="room-name" type="text" placeholder="Room Name" />
-            <button id="join">参加</button>
+
+<nav class="navbar navbar-expand-lg bg-light" data-bs-theme="light">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">libpeer test</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor03" aria-controls="navbarColor03" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarColor03">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/sepfy/libpeer">Github</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://ko-fi.com/sepfy95">Sponsor</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+  <div class="container mt-4">
+    <div class="mb-4">
+      <div class="row mb-2">
+        <div class="col-1">
+          <p class="h5 mb-0">URL:</p>
+        </div>
+        <div class="col-7">
+          <p class="h5 mb-0" id="device-url"></p>
+        </div>
+        <div class="col-3 d-flex align-items-center gap-4">
+	  <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="camera-switch">
+            <label class="form-check-label" for="switch1">Camera</label>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="microphone-switch">
+            <label class="form-check-label" for="switch2">Microphone</label>
+        </div>
+          <button class="btn btn-outline-dark" id="connect">Connect</button>
+        </div>
+      </div>
+      <div class="row mb-2">
+        <div class="col-1">
+          <p class="h5 mb-0">Status:</p>
+        </div>
+        <div class="col-11">
+          <p class="h5 mb-0" id="status">Disconnected</p>
+        </div>
+      </div>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="p-3 border bg-light text-center">
+          <h5>Video</h5>
+          <video controls id="video-stream" class="w-100" style="max-height: 400px; display: none">
+            <p>Your browser does not support the video element.</p>
+          </video>
+          <img id="img-stream" class="w-100">
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="p-3 border bg-light text-center mb-3">
+          <h5>Audio</h5>
+          <audio controls id="audio-stream" class="w-100">
+            <p>Your browser does not support the audio element.</p>
+          </audio>
         </div>
 
-        <label class="switch">
-            <input type="checkbox" id="videoToggle" title="Toggle Video">
-            <span class="slider round"></span>
-        </label>
-        <p id="status">カメラ OFF</p>
-        <video id="local-video" width="400px" muted playsinline></video>
-
-        <div id="remote-media-area"></div>
-
-        <div id="button-area"></div>
+        <div class="p-3 border bg-light text-center">
+          <h5>DataChannel</h5>
+            <textarea id="datachannel-input" class="form-control" rows="12"></textarea>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@skyway-sdk/room/dist/skyway_room-latest.js"></script>
-    <script type="module" src="main.js"></script>
+<script>
+
+const queryString = window.location.search
+const urlParams = new URLSearchParams(queryString)
+const deviceId = urlParams.get("id")
+const resultTopic = "/public/" + deviceId + "/result"
+const invokeTopic = "/public/" + deviceId + "/invoke"
+const client  = mqtt.connect('wss://libpeer.com:8084/mqtt')
+
+function getRandomItem(array) {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+function generateRadomId() {
+  const appearance = ["fluffy", "spotted", "striped", "sleek", "furry", "shiny"];
+  const personality = ["brave", "calm", "happy", "kind", "lazy", "smart"];
+  const animals = ["lion", "tiger", "panda", "fox", "rabbit", "eagle"];
+
+  const randomAppearance = getRandomItem(appearance);
+  const randomPersonality = getRandomItem(personality);
+  const randomAnimal = getRandomItem(animals);
+  return `${randomAppearance}-${randomPersonality}-${randomAnimal}`;
+}
+
+window.onload = function() {
+
+  if (deviceId == undefined) {
+    const randomId = generateRadomId();
+    window.location.href = window.location.href + "?id=" + randomId;
+  } 
+
+  document.getElementById("device-url").innerHTML = "mqtts://libpeer.com/public/" + deviceId;
+  const canvas = document.createElement('canvas')
+  canvas.width = 640
+  canvas.height = 480
+  
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = 'rgba(200, 200, 200, 100)'
+  ctx.fillRect(0, 0, 640, 480)
+
+  const img = new Image(640, 480)
+  img.src = canvas.toDataURL()
+
+  document.getElementById('img-stream').src = img.src;
+}
+
+var offerId = Math.floor((Math.random() * 1000) + 1);
+var answerId = Math.floor((Math.random() * 1000) + 1);
+var closeId = Math.floor((Math.random() * 1000) + 1);
+
+var pc = new RTCPeerConnection({
+  iceServers: [
+    {
+      urls: "stun:stun.l.google.com:19302",
+    },
+  ],
+});
+
+const datachannel = pc.createDataChannel("libpeer")
+
+pc.ontrack = (e) => {
+
+  if (e.track.kind == "video") {
+
+    var el = document.getElementById('video-stream');
+    var newStream = new MediaStream();
+    newStream.addTrack(e.track);
+    el.srcObject = newStream;
+    el.autoplay = true
+    el.controls = false
+    el.muted = true
+    document.getElementById("img-stream").style.display = "none";
+    document.getElementById("video-stream").style.display = "block";
+
+  } else if (e.track.kind == "audio") {
+
+    var el = document.getElementById("audio-stream");
+    var newStream = new MediaStream();
+    newStream.addTrack(e.track);
+    el.srcObject = newStream;
+    el.autoplay = true
+    el.controls = true
+    el.muted = true
+  }
+}
+
+pc.oniceconnectionstatechange = (e) => {
+
+  document.getElementById("status").innerHTML = pc.iceConnectionState;
+}
+
+pc.ondatachannel = () => {
+  console.log('ondatachannel');
+}
+
+datachannel.onclose = () => {
+  console.log('datachannel has closed');
+}
+
+function updateTextarea(text) {
+  const currentTime = new Date().toLocaleTimeString(); 
+  const timestamp = `[${currentTime}] `;
+  const textarea = document.getElementById("datachannel-input");
+  textarea.value += (textarea.value ? "\n" : "") + timestamp + text;
+  textarea.scrollTop = textarea.scrollHeight;
+}
+
+datachannel.onopen = () => {
+  console.log('datachannel has opened');
+  console.log('sending ping');
+  setInterval(() => {
+    console.log('sending ping');
+    updateTextarea("ping");
+    datachannel.send("ping");
+  }, 1000);
+}
+
+datachannel.onmessage = (e) => {
+
+  if (e.data.byteLength === undefined) {
+
+    console.log(e.data);
+    updateTextarea("<<<" + e.data);
+  } else {
+
+    // is binary data. mjpeg stream
+    //console.log(e.data.byteLength);
+    var arrayBufferView = new Uint8Array(e.data);
+    var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
+    var urlCreator = window.URL || window.webkitURL;
+    var imageUrl = urlCreator.createObjectURL( blob );
+  
+    var imageElement = document.getElementById('img-stream');
+    imageElement.src = imageUrl;
+  }  
+}
+
+pc.onicecandidate = (e) => {
+  //console.log(e)
+}
+
+pc.onicegatheringstatechange = () => {
+
+  if (pc.iceGatheringState === "complete") {
+    console.log(pc.localDescription.sdp)
+    client.publish(invokeTopic, JSON.stringify({
+      jsonrpc: "2.0",
+      method: "answer",
+      params: pc.localDescription.sdp,
+      id: answerId,
+    }))
+  }
+};
+
+client.on('connect', () => {
+  console.log("connected")
+  client.subscribe(resultTopic, (err) => { })
+})
+
+document.getElementById("connect").addEventListener("click", () => {
+
+  const cameraSwitch = document.getElementById("camera-switch");
+  const microphoneSwitch = document.getElementById("microphone-switch");
+  const constraints = {
+    video: cameraSwitch.checked,
+    audio: microphoneSwitch.checked,
+  }
+
+  if (constraints.video || constraints.audio) {
+    navigator.mediaDevices.getUserMedia(constraints).then(stream => {
+      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+    }).catch((e) => {
+      alert(e)
+    });
+  }
+
+  client.publish(invokeTopic, JSON.stringify({
+    jsonrpc: "2.0",
+    method: "offer",
+    id: offerId,
+  }))
+})
+
+client.on("message", (topic, message) => {
+
+  let msg = JSON.parse(message.toString())
+  if (msg.id == offerId) {
+    console.log(msg.result)
+    pc.setRemoteDescription({type: "offer", sdp: msg.result});
+    pc.createAnswer().then(d => pc.setLocalDescription(d));
+  } 
+})
+</script>
+
 </body>
 </html>
