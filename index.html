@@ -137,6 +137,8 @@ var answerId = Math.floor((Math.random() * 1000) + 1);
 var closeId = Math.floor((Math.random() * 1000) + 1);
 
 var pc = new RTCPeerConnection({
+  offerToReceiveAudio: 1,
+  offerToReceiveVideo: 0,
   iceServers: [
     {
       urls: "stun:stun.l.google.com:19302",
