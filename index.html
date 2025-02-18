@@ -115,6 +115,7 @@ window.onload = function() {
   if (deviceId == undefined) {
     const randomId = generateRadomId();
     window.location.href = window.location.href + "?id=" + randomId;
+    console.log(window.location.href);	  
   } 
 
   document.getElementById("device-url").innerHTML = "mqtts://libpeer.com/public/" + deviceId;
