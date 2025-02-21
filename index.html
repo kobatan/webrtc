@@ -2,7 +2,8 @@
 <html>
 <head>
  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
- <title>WebSocket</title>
+ <title>WebSocket MQTT</title>
+ <script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.min.js"></script>
 </head>
 <body>
   WebSocket Signaling 1to1<br />
@@ -25,12 +26,8 @@
     <br />
     <textarea id="text_for_receive_sdp" rows="5" cols="60"></textarea>
   </p>
-
-  <script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.min.js"></script>
-  <script type="text/javascript">
-
-  //const mqtt = require('mqtt'); // MQTT通信プロトコルのモジュールを呼び出す。
-  console.log(mqtt); 
+</body>
+<script type="text/javascript">
   let localVideo = document.getElementById('local_video');
   let remoteVideo = document.getElementById('remote_video');
   let localStream = null;
@@ -42,22 +39,45 @@
                             navigator.mozGetUserMedia || navigator.msGetUserMedia;
   RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
   RTCSessionDescription = window.RTCSessionDescription || window.webkitRTCSessionDescription || window.mozRTCSessionDescription;
-  
-  var clientId = "emqx_client_01"; // 適当なクライアントID。今回は一意にしません
+
+// EMQX ブローカー  
+// Server: broker.emqx.io
+// TCP Port: 1883
+// WebSocket Port: 8083
+// SSL/TLS Port: 8883
+// WebSocket Port(SSL): 8084
+
+//  const mqtt = require('mqtt'); // MQTT通信プロトコルのモジュールを呼び出す。（これ要らなくなった。）
+const fs = require('fs');
+const path = require('path');
+
+const KEY = fs.readFileSync(path.join(__dirname, '/tls-key.pem'))
+const CERT = fs.readFileSync(path.join(__dirname, '/tls-cert.pem'))
+const TRUSTED_CA_LIST = fs.readFileSync(path.join(__dirname, '/crt.ca.cg.pem'))
+
+var clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8); // 適当なクライアントID。今回は一意にしません
   var user_name = "emqx"; 
   var pass = "public";  
-  let ws_url = 'wss://broker.emqx.io:8083/mqtt';  // MQTTブローカー
+//  let host = 'ws://broker.emqx.io:8083/mqtt';  // MQTTブローカー 8083=WebSocket Port
+  let host = 'wss://broker.emqx.io:8084/mqtt';  // MQTTブローカー 8083=WebSocket Port
   // Create an MQTT client instance
   const options = {
-    // Clean session
-    clean: true,
-    connectTimeout: 4000,
-    // Authentication
+    keepalive:60,
     clientId: clientId,
-    username: user_name,
-    password: pass,
+    protocolId:'MQTT',
+    protocolVersion: 4,
+//    username: user_name,
+//    password: pass,
+    clean: true,
+    reconnectPeriod: 1000,
+    connectTimeout: 30*1000,
+//    key: KEY,
+//    cert: CERT,
+//    rejectUnauthorized: true,
+//    ca: TRUSTED_CA_LIST,
   }
-  const client  = mqtt.connect(ws_url, options); // 接続する
+  console.log('Connecting mqtt client');
+  const client  = mqtt.connect(host, options); // 接続する
 
   client.on('connect', function () {  // 接続出来たら
     console.log('MQTT Connected');
@@ -487,5 +507,4 @@
   }
 
 </script>
-</body>
 </html>
