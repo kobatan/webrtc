@@ -421,7 +421,7 @@
 
     return peer;
   }
-  
+  /*
   function makeOffer() {
     unsubscribe("offer");  // offerの待ち受けを解除
     subscribe("answer");  // answerを待ち受ける
@@ -432,7 +432,7 @@
       console.log("Create Offer failed");
     }, mediaConstraints);
   }
-/*
+*/
   function makeOffer() {  // Offer SDPを作成し送信する
     peerConnection = prepareNewConnection();  // RTCPeerConnectionを生成し、必要なメッセージハンドラを設定
     peerConnection.createOffer()              // Offer SDPを生成 （非同期で処理が行われるので、.then()で受け止める。Promise）
@@ -449,7 +449,7 @@
         console.error(err);
       });
   }
-*/
+
   function setOffer(sessionDescription) { // offerメーッセージをリモートSDPにセット
     if (peerConnection) {
       console.error('peerConnection alreay exist!');
