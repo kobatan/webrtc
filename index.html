@@ -207,18 +207,16 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 */
   function sendSdp(sessionDescription) {  // wsでSDPを送信する
     console.log('sending sdp ...');
+/*
     var topic = sessionDescription.type;
     message = new Paho.MQTT.Message(sessionDescription.sdp);
     message.destinationName = topic;
     client.send(message);
-/*
-    textForSendSdp.value = sessionDescription.sdp;
-
-    let message = JSON.stringify(sessionDescription);
-    console.log('sending SDP=' + message);
-  //  ws.send(message);
-    send_mqtt('SDP', message); // MQTTに送信
 */
+    textForSendSdp.value = sessionDescription.sdp;  // テキストエリアに表示
+    let message = JSON.stringify(sessionDescription);
+//    console.log('sending SDP=' + message);
+    client.send(message);
   }
 /*
   function sendIceCandidate(candidate) {
