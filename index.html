@@ -40,7 +40,7 @@
                             navigator.mozGetUserMedia || navigator.msGetUserMedia;
   RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
   RTCSessionDescription = window.RTCSessionDescription || window.webkitRTCSessionDescription || window.mozRTCSessionDescription;
-  
+  console.log(mqtt);  
   const mqtt = require('mqtt');
   let url = 'ws://broker.emqx.io:8083/mqtt';  // MQTTブローカー
   // Create an MQTT client instance
