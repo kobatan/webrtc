@@ -47,34 +47,46 @@
 // SSL/TLS Port: 8883
 // WebSocket Port(SSL): 8084
 
-//  const mqtt = require('mqtt'); // MQTT通信プロトコルのモジュールを呼び出す。（これ要らなくなった。）
-///const fs = require('fs');
-///const path = require('path');
+// const mqtt = require('mqtt'); // MQTT通信プロトコルのモジュールを呼び出す。（これ要らなくなった。）
+// const fs = require('fs');
+// const path = require('path');
 
-const KEY = fs.readFileSync(path.join(__dirname, '/tls-key.pem'))
-const CERT = fs.readFileSync(path.join(__dirname, '/tls-cert.pem'))
-const TRUSTED_CA_LIST = fs.readFileSync(path.join(__dirname, '/crt.ca.cg.pem'))
+//const KEY = fs.readFileSync(path.join(__dirname, '/tls-key.pem'))
+//const CERT = fs.readFileSync(path.join(__dirname, '/tls-cert.pem'))
+const TRUSTED_CA_LIST = fs.readFileSync(path.join(__dirname, '/emqxsl-ca.crt'))
 
-var clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8); // 適当なクライアントID。今回は一意にしません
-  var user_name = "emqx"; 
-  var pass = "public";  
+// MQTT 接続情報
+// 接続先：// ebb8eeee.ala.asia-southeast1.emqxsl.com
+// user名: user
+// password: password 
+// MQTT over TLS/SSL ポート：
+// 8883
+// WebSocket over TLS/SSL ポート：
+// 8084
+// APIキー = https://ebb8eeee.ala.asia-southeast1.emqxsl.com:8443/api/v5
+
+  var clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8); // 適当なクライアントID。今回は一意にしません
+  const broker = 'ebb8eeee.ala.asia-southeast1.emqxsl.com';
+//  const border = 'broker.emqx.io';
+  var user_name = "user"; 
+  var pass = "password";  
 //  let host = 'ws://broker.emqx.io:8083/mqtt';  // MQTTブローカー 8083=WebSocket Port
-  let host = 'wss://broker.emqx.io:8084/mqtt';  // MQTTブローカー 8083=WebSocket Port
+  let host = 'wss://' + broker + ':8084/mqtt';  // MQTTブローカー 8083=WebSocket Port
   // Create an MQTT client instance
   const options = {
     keepalive:60,
     clientId: clientId,
     protocolId:'MQTT',
     protocolVersion: 4,
-//    username: user_name,
-//    password: pass,
+    username: user_name,
+    password: pass,
     clean: true,
     reconnectPeriod: 1000,
     connectTimeout: 30*1000,
 //    key: KEY,
 //    cert: CERT,
 //    rejectUnauthorized: true,
-//    ca: TRUSTED_CA_LIST,
+    ca: TRUSTED_CA_LIST,
   }
   console.log('Connecting mqtt client');
   const client  = mqtt.connect(host, options); // 接続する
@@ -85,11 +97,28 @@ var clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8); // 適当な
     subscribe("offer"); // offerを待ち受ける。(subscribe=購読する)
   })
 
+  function buildTopic(signalingType) {
+   var topic = user_name + '/signaling/' + signalingType;
+   return topic;
+  }
+
   function subscribe(waitType) {
-    var topic = user_name + '/signaling/' + waitType;
+    var topic = buildTopic(waitType);
     client.subscribe(topic);    // topicを待ち受ける
   }
-  
+
+  function unsubscribe(waitType) {
+    var topic = buildTopic(waitType);
+    client.unsubscribe(topic);
+  }
+
+  function sendSDPTextMQTT(type, text){
+   var topic = buildTopic(type);
+   message = new Paho.MQTT.Message(text);
+   message.destinationName = topic;
+   client.send(message);
+  }
+
   function onMessageArrived(message) {
      if (message.destinationName === buildTopic('answer')) {
        console.log('Received answer ...');
