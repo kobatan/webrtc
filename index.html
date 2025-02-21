@@ -41,7 +41,7 @@
   RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
   RTCSessionDescription = window.RTCSessionDescription || window.webkitRTCSessionDescription || window.mozRTCSessionDescription;
   
-  const mqtt = require('mqtt')
+  const mqtt = require('mqtt');
   let url = 'ws://broker.emqx.io:8083/mqtt';  // MQTTブローカー
   // Create an MQTT client instance
   const options = {
@@ -56,7 +56,7 @@
 
   const client  = mqtt.connect(url, options)
   client.on('connect', function () {
-    console.log('Connected')
+    console.log('Connected');
     // Subscribe to a topic
 
   })
