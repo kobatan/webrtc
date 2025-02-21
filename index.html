@@ -87,52 +87,116 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 //    rejectUnauthorized: true,
     ca: TRUSTED_CA_LIST,    // CA証明書
   }
-  console.log('Connecting mqtt client....');
+  console.log('Connecting mqtt client ...');
   const client  = mqtt.connect(host, options); // 接続する
 
   client.on('connect', function () {  // 接続出来たら
     console.log('MQTT Connected');
-//    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
-    subscribe("offer"); // offerを待ち受ける。(subscribe=購読する)
+    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
+    subscribe('offer'); // offerを待ち受ける。(subscribe=購読する)
   })
 
-  function buildTopic(signalingType) {
-   var topic = user_name + '/signaling/' + signalingType;
+  function buildTopic(subtitle) {   // topic名を作成
+   var topic = user_name + '/signaling/' + subtitle;
    return topic;
   }
 
-  function subscribe(waitType) {
-    var topic = buildTopic(waitType);
-    client.subscribe(topic);    // topicを待ち受ける
+  function subscribe(subtitle) {      // 購読予約する
+    var topic = buildTopic(subtitle); // topic名を生成
+    client.subscribe(topic);          // topicで待ち受ける
   }
 
-  function unsubscribe(waitType) {
-    var topic = buildTopic(waitType);
-    client.unsubscribe(topic);
+  function unsubscribe(subtitle) {    // 購読予約を解除する
+    var topic = buildTopic(subtitl);  // topic名を生成
+    client.unsubscribe(topic);        // topic名の予約を解除する
   }
 
-  function sendSDPTextMQTT(type, text){
-   var topic = buildTopic(type);
+  function sendSDPTextMQTT(subtitle, text){
+   textForSendSdp.value = text.sdp;  // テキストエリアに表示 
+   var topic = buildTopic(subtitle);
    message = new Paho.MQTT.Message(text);
    message.destinationName = topic;
    client.send(message);
+  }
+
+  function sendSdp(sessionDescription) {  // wsでSDPを送信する
+    console.log('sending sdp ...');
+    textForSendSdp.value = sessionDescription.sdp;  // テキストエリアに表示
+
+    var topic = sessionDescription.type;
+    message = new Paho.MQTT.Message(sessionDescription.sdp);
+    message.destinationName = topic;
+    client.send(message);
+  }
+
+  function sendIceCandidate(candidate) {
+    console.log('---sending ICE candidate ---');
+    let obj = { type: 'candidate', ice: candidate };
+    let message = JSON.stringify(obj);
+    console.log('sending candidate=' + message);
+    client.send(message);
+  }
+
+  function setOfferText(text) {
+    peerConnection = prepareNewConnection();
+    var offer = new RTCSessionDescription({
+      type : 'offer',
+      sdp : text,
+    });
+    peerConnection.setRemoteDescription(offer);
+  }
+  
+  function setAnswerText(text) {
+    if (! peerConnection) {
+      console.error('peerConnection NOT exist!');
+      return;
+    }
+    var answer = new RTCSessionDescription({
+      type : 'answer',
+      sdp : text,
+    });
+    peerConnection.setRemoteDescription(answer);
+  }
+
+  function makeAnswer(evt) {
+    console.log('sending Answer. Creating remote session description...' );
+    if (! peerConnection) {
+      console.error('peerConnection NOT exist!');
+      return;
+    }
+    peerConnection.createAnswer(function (sessionDescription) { // in case of success
+      peerConnection.setLocalDescription(sessionDescription);
+    }, function () { // in case of error
+      console.log("Create Answer failed");
+    }, mediaConstraints);
+  }
+  
+  function onOfferText(text) {
+    setOfferText(text);
+    makeAnswer();
+  }
+
+  function onAnswerText(text) {
+    console.log("Received answer text...")
+    setAnswerText(text);
   }
 
   function onMessageArrived(message) {
      if (message.destinationName === buildTopic('answer')) {
        console.log('Received answer ...');
        textToReceiveSdp.value = message.sdp;
-       let answer = new RTCSessionDescription(message);
-       setAnswer(answer);
-   //    onAnswerText(message.payloadString)
+//       let answer = new RTCSessionDescription(message);
+//       setAnswer(answer);
+       onAnswerText(message.payloadString)
      }
      else if (message.destinationName === buildTopic('offer')) {
       console.log('Received offer ...');
       textToReceiveSdp.value = message.sdp;
-      let offer = new RTCSessionDescription(message);
-      setOffer(offer);  
-    //  onOfferText(message.payloadString)
+//      let offer = new RTCSessionDescription(message);
+//      setOffer(offer);  
+      onOfferText(message.payloadString)
      }
+/*    
      else if (message.destinationName === buildTopic('candidate')) {
       // --- got ICE candidate ---
       console.log('Received ICE candidate ...');
@@ -140,11 +204,12 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
       console.log(candidate);
       addIceCandidate(candidate);   // 覚えさせる
     }
+*/
      else {
        console.warn('Bad SDP topic');
      }
   }
-
+/*
   // Receive messages
   client.on('message', function (topic, message) {
     console.log(message.toString());
@@ -170,7 +235,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     }   
 //    client.end()
   })
-
+*/
  /*
   let ws = new WebSocket(wsUrl);
   ws.onopen = function(evt) {
@@ -205,29 +270,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     }
   };
 */
-  function sendSdp(sessionDescription) {  // wsでSDPを送信する
-    console.log('sending sdp ...');
-/*
-    var topic = sessionDescription.type;
-    message = new Paho.MQTT.Message(sessionDescription.sdp);
-    message.destinationName = topic;
-    client.send(message);
-*/
-    textForSendSdp.value = sessionDescription.sdp;  // テキストエリアに表示
-    let message = JSON.stringify(sessionDescription);
-//    console.log('sending SDP=' + message);
-    client.send(message);
-  }
-/*
-  function sendIceCandidate(candidate) {
-    console.log('---sending ICE candidate ---');
-    let obj = { type: 'candidate', ice: candidate };
-    let message = JSON.stringify(obj);
-    console.log('sending candidate=' + message);
-  //  ws.send(message);
-    send_mqtt('ICE', message); // MQTTに送信
-  }
-*/
+
+
   // ---------------------- media handling ----------------------- 
   // start local video
   function startVideo() {
@@ -363,7 +407,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
         console.log('empty ice event');
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
-        sendSdp(peer.localDescription);
+//      sendSdp(peer.localDescription);
+        sendSDPTextMQTT(peer.localDescription.type, peer.localDescription.sdp);
       }
     };
 
@@ -411,6 +456,14 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
       console.warn('no local stream, but continue.');
     }
 
+    peer.addEventListener("addstream", onRemoteStreamAdded, false);
+    peer.addEventListener("removestream", onRemoteStreamRemoved, false)
+    function onRemoteStreamAdded(event) {
+      remoteVideo.src = window.webkitURL.createObjectURL(event.stream);
+    }
+    function onRemoteStreamRemoved(event) {
+      remoteVideo.src = "";
+    }
     return peer;
   }
   /*
