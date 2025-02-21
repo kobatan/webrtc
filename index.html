@@ -48,8 +48,8 @@
 // WebSocket Port(SSL): 8084
 
 //  const mqtt = require('mqtt'); // MQTT通信プロトコルのモジュールを呼び出す。（これ要らなくなった。）
-const fs = require('fs');
-const path = require('path');
+///const fs = require('fs');
+///const path = require('path');
 
 const KEY = fs.readFileSync(path.join(__dirname, '/tls-key.pem'))
 const CERT = fs.readFileSync(path.join(__dirname, '/tls-cert.pem'))
