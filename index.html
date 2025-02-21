@@ -93,7 +93,7 @@
 
   client.on('connect', function () {  // 接続出来たら
     console.log('MQTT Connected');
-    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
+//    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
     subscribe("offer"); // offerを待ち受ける。(subscribe=購読する)
   })
 
