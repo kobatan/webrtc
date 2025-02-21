@@ -2,10 +2,10 @@
 <html>
 <head>
  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
- <title>WebSocket Signaling 1to1</title>
+ <title>WebSocket</title>
 </head>
 <body>
-  WebSocket Signaling 1to1 (trickle ICE)<br />
+  WebSocket Signaling 1to1<br />
   <button type="button" onclick="startVideo();">Start Video</button>
   <button type="button" onclick="stopVideo();">Stop Video</button>
   &nbsp;
@@ -26,40 +26,76 @@
     <textarea id="text_for_receive_sdp" rows="5" cols="60"></textarea>
   </p>
 
-<script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.min.js"></script>
-<script type="text/javascript">
+  <script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.min.js"></script>
+  <script type="text/javascript">
+  console.log(mqtt);
+  const mqtt = require('mqtt'); // MQTT通信プロトコルのモジュールを呼び出す。
+  
   let localVideo = document.getElementById('local_video');
   let remoteVideo = document.getElementById('remote_video');
   let localStream = null;
   let peerConnection = null;
   let textForSendSdp = document.getElementById('text_for_send_sdp');
   let textToReceiveSdp = document.getElementById('text_for_receive_sdp');
-
   // --- prefix -----
   navigator.getUserMedia  = navigator.getUserMedia    || navigator.webkitGetUserMedia ||
                             navigator.mozGetUserMedia || navigator.msGetUserMedia;
   RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
   RTCSessionDescription = window.RTCSessionDescription || window.webkitRTCSessionDescription || window.mozRTCSessionDescription;
-  console.log(mqtt);  
-  const mqtt = require('mqtt');
-  let url = 'ws://broker.emqx.io:8083/mqtt';  // MQTTブローカー
+  
+  var clientId = "emqx_client_01"; // 適当なクライアントID。今回は一意にしません
+  var user_name = "emqx"; 
+  var pass = "public";  
+  let ws_url = 'ws://broker.emqx.io:8083/mqtt';  // MQTTブローカー
   // Create an MQTT client instance
   const options = {
     // Clean session
     clean: true,
     connectTimeout: 4000,
     // Authentication
-    clientId: 'emqx_test',
-    username: 'emqx_test',
-    password: 'emqx_test',
+    clientId: clientId,
+    username: user_name,
+    password: pass,
   }
+  const client  = mqtt.connect(ws_url, options); // 接続する
 
-  const client  = mqtt.connect(url, options)
-  client.on('connect', function () {
-    console.log('Connected');
-    // Subscribe to a topic
-
+  client.on('connect', function () {  // 接続出来たら
+    console.log('MQTT Connected');
+    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
+    subscribe("offer"); // offerを待ち受ける。(subscribe=購読する)
   })
+
+  function subscribe(waitType) {
+    var topic = user_name + '/signaling/' + waitType;
+    client.subscribe(topic);    // topicを待ち受ける
+  }
+  
+  function onMessageArrived(message) {
+     if (message.destinationName === buildTopic('answer')) {
+       console.log('Received answer ...');
+       textToReceiveSdp.value = message.sdp;
+       let answer = new RTCSessionDescription(message);
+       setAnswer(answer);
+   //    onAnswerText(message.payloadString)
+     }
+     else if (message.destinationName === buildTopic('offer')) {
+      console.log('Received offer ...');
+      textToReceiveSdp.value = message.sdp;
+      let offer = new RTCSessionDescription(message);
+      setOffer(offer);  
+    //  onOfferText(message.payloadString)
+     }
+     else if (message.destinationName === buildTopic('candidate')) {
+      // --- got ICE candidate ---
+      console.log('Received ICE candidate ...');
+      let candidate = new RTCIceCandidate(message.ice);
+      console.log(candidate);
+      addIceCandidate(candidate);   // 覚えさせる
+    }
+     else {
+       console.warn('Bad SDP topic');
+     }
+  }
 
   function send_mqtt(type, message){
     client.subscribe(type, function (err) {
@@ -336,7 +372,18 @@
 
     return peer;
   }
-
+  
+  function makeOffer() {
+    unsubscribe("offer");  // offerの待ち受けを解除
+    subscribe("answer");  // answerを待ち受ける
+    peerConnection = prepareNewConnection();
+    peerConnection.createOffer(function (sessionDescription) { // in case of success
+      peerConnection.setLocalDescription(sessionDescription);
+    }, function () { // in case of error
+      console.log("Create Offer failed");
+    }, mediaConstraints);
+  }
+/*
   function makeOffer() {  // Offer SDPを作成し送信する
     peerConnection = prepareNewConnection();  // RTCPeerConnectionを生成し、必要なメッセージハンドラを設定
     peerConnection.createOffer()              // Offer SDPを生成 （非同期で処理が行われるので、.then()で受け止める。Promise）
@@ -353,7 +400,7 @@
         console.error(err);
       });
   }
-
+*/
   function setOffer(sessionDescription) { // offerメーッセージをリモートSDPにセット
     if (peerConnection) {
       console.error('peerConnection alreay exist!');
