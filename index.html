@@ -72,8 +72,8 @@
 
   // Receive messages
   client.on('message', function (topic, message) {
-    // message is Buffer
-    console.log(message.toString())
+    consol.log(topic.toString());
+    console.log(message.toString());
     if(message.type === 'offer'){
       console.log('Received offer ...');
       textToReceiveSdp.value = message.sdp;
@@ -278,13 +278,15 @@
     peer.onicecandidate = function (evt) { // local ICE candidateが収集される度に呼び出される。
       if (evt.candidate) {                // ICE candidate が収集された場合
         console.log(evt.candidate);
-        sendIceCandidate(evt.candidate);  // ICE candidateを相手に送る (Trickle ICE の場合)
+        // Vanilla ICE の場合には、何もしない
+        // Tricle ICE の場合は、ここでICE candidateを相手に送る
+        // sendIceCandidate(evt.candidate);  // ICE candidateを相手に送る (Trickle ICE の場合)
 
       } else {                            // ICE candidateの収集が完了した時
         console.log('empty ice event');
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
-        //sendSdp(peer.localDescription);
+        sendSdp(peer.localDescription);
       }
     };
 
@@ -343,8 +345,9 @@
         return peerConnection.setLocalDescription(sessionDescription);  // 生成したOffer SDPを、ローカルに記録。（非同期で処理が行われるので、.then()で受け止める。Promise）
       }).then(function() {
         console.log('setLocalDescription() succsess in promise');
-    
-        sendSdp(peerConnection.localDescription);   // ローカルSDPを相手に送る。(Trickle ICE 処理)
+        // Vanilla ICE の場合には、まだSDPは送らない 
+        // Trickle Ice の場合ここで置くる
+        // sendSdp(peerConnection.localDescription);   // ローカルSDPを相手に送る。(Trickle ICE 処理)
 
       }).catch(function(err) {
         console.error(err);
@@ -378,8 +381,9 @@
         return peerConnection.setLocalDescription(sessionDescription);  // 生成したAnswer SDPをローカルSDPにする。(Promiseを使った非同期処理で行われる。)
       }).then(function() {
         console.log('setLocalDescription() succsess in promise');
-
-        sendSdp(peerConnection.localDescription); // ローカルSDPを相手に送る(Trickle ICE の場合)
+        // Vanilla ICE の場合には、まだSDPは送らない
+        // Tricle ICE の場合は送る
+        //sendSdp(peerConnection.localDescription); // ローカルSDPを相手に送る(Trickle ICE の場合)
 
       }).catch(function(err) {
         console.error(err);
