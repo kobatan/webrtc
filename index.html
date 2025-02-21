@@ -157,7 +157,6 @@
 
   // Receive messages
   client.on('message', function (topic, message) {
-    consol.log(topic.toString());
     console.log(message.toString());
     if(message.type === 'offer'){
       console.log('Received offer ...');
