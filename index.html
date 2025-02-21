@@ -53,8 +53,8 @@
 
 //const KEY = fs.readFileSync(path.join(__dirname, '/tls-key.pem'))
 //const CERT = fs.readFileSync(path.join(__dirname, '/tls-cert.pem'))
-// const TRUSTED_CA_LIST = fs.readFileSync(path.join(__dirname, '/emqxsl-ca.crt'))
- const TRUSTED_CA_LIST = './emqxsl-ca.crt';
+const TRUSTED_CA_LIST = './emqxsl-ca.crt';
+
 // MQTT 接続情報
 // 接続先：// ebb8eeee.ala.asia-southeast1.emqxsl.com
 // user名: user
@@ -66,14 +66,13 @@
 // APIキー = https://ebb8eeee.ala.asia-southeast1.emqxsl.com:8443/api/v5
 
   var clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8); // 適当なクライアントID。今回は一意にしません
-  const broker = 'ebb8eeee.ala.asia-southeast1.emqxsl.com';
 //  const border = 'broker.emqx.io';
+  const broker = 'ebb8eeee.ala.asia-southeast1.emqxsl.com';
   var user_name = "user"; 
   var pass = "password";  
-//  let host = 'ws://broker.emqx.io:8083/mqtt';  // MQTTブローカー 8083=WebSocket Port
-  let host = 'wss://' + broker + ':8084/mqtt';  // MQTTブローカー 8083=WebSocket Port
-  // Create an MQTT client instance
-  const options = {
+  let host = 'wss://' + broker + ':8084/mqtt';  // MQTTブローカー
+
+  const options = {  // Create an MQTT client instance
     keepalive:60,
     clientId: clientId,
     protocolId:'MQTT',
@@ -86,9 +85,9 @@
 //    key: KEY,
 //    cert: CERT,
 //    rejectUnauthorized: true,
-    ca: TRUSTED_CA_LIST,
+    ca: TRUSTED_CA_LIST,    // CA証明書
   }
-  console.log('Connecting mqtt client');
+  console.log('Connecting mqtt client....');
   const client  = mqtt.connect(host, options); // 接続する
 
   client.on('connect', function () {  // 接続出来たら
@@ -144,15 +143,6 @@
      else {
        console.warn('Bad SDP topic');
      }
-  }
-
-  function send_mqtt(type, message){
-    client.subscribe(type, function (err) {
-      if (!err) {
-        // Publish a message to a topic
-        client.publish(type, message);
-      }
-    })
   }
 
   // Receive messages
@@ -216,16 +206,21 @@
   };
 */
   function sendSdp(sessionDescription) {  // wsでSDPを送信する
-    console.log('---sending sdp ---');
-
+    console.log('sending sdp ...');
+    var topic = sessionDescription.type;
+    message = new Paho.MQTT.Message(sessionDescription.sdp);
+    message.destinationName = topic;
+    client.send(message);
+/*
     textForSendSdp.value = sessionDescription.sdp;
 
     let message = JSON.stringify(sessionDescription);
     console.log('sending SDP=' + message);
   //  ws.send(message);
     send_mqtt('SDP', message); // MQTTに送信
-}
-
+*/
+  }
+/*
   function sendIceCandidate(candidate) {
     console.log('---sending ICE candidate ---');
     let obj = { type: 'candidate', ice: candidate };
@@ -234,7 +229,7 @@
   //  ws.send(message);
     send_mqtt('ICE', message); // MQTTに送信
   }
-
+*/
   // ---------------------- media handling ----------------------- 
   // start local video
   function startVideo() {
