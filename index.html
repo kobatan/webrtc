@@ -28,9 +28,9 @@
 
   <script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.min.js"></script>
   <script type="text/javascript">
-  console.log(mqtt);
+
   const mqtt = require('mqtt'); // MQTT通信プロトコルのモジュールを呼び出す。
-  
+  console.log(mqtt); 
   let localVideo = document.getElementById('local_video');
   let remoteVideo = document.getElementById('remote_video');
   let localStream = null;
