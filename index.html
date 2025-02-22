@@ -3,9 +3,8 @@
 <head>
  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
  <title>WebSocket MQTT</title>
- <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.10.3/mqtt.min.js"></script>-->
- <script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.js"></script>
- <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.js"></script> 
+<!--<script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.js"></script>-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.js"></script> 
 </head>
 <body>
   WebSocket Signaling 1to1<br />
@@ -30,6 +29,7 @@
   </p>
 </body>
 <script type="text/javascript">
+  
   let localVideo = document.getElementById('local_video');
   let remoteVideo = document.getElementById('remote_video');
   let localStream = null;
@@ -91,6 +91,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   }
   console.log('Connecting mqtt client ...');
   const client  = mqtt.connect(host, options); // 接続する
+//  const client = new Paho.MQTT.Client(host, Number(8084), clientId);
 
   client.on('connect', function () {  // 接続出来たら
     console.log('MQTT Connected');
@@ -118,10 +119,9 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
    var topic = buildTopic(subtitle);
    message = new Paho.Message(text);
    message.destinationName = topic;
-//   client.send(message);
-   client.publish(topic, text);  
+   client.publish(topic, text);
   }
-
+/*
   function sendSdp(sessionDescription) {  // wsでSDPを送信する
     console.log('sending sdp ...');
     textForSendSdp.value = sessionDescription.sdp;  // テキストエリアに表示
@@ -139,7 +139,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     console.log('sending candidate=' + message);
     client.send(message);
   }
-
+*/
   function setOfferText(text) {
     peerConnection = prepareNewConnection();
     var offer = new RTCSessionDescription({
@@ -172,6 +172,17 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     }, function () { // in case of error
       console.log("Create Answer failed");
     }, mediaConstraints);
+  }
+
+  function onSDPText() {
+   var text = textToReceiveSDP.value;
+   if (peerConnection) {
+    onAnswerText(text);
+   }
+   else {
+    onOfferText(text);
+   }
+   textToReceiveSDP.value ="";
   }
   
   function onOfferText(text) {
@@ -431,6 +442,9 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 
     peer.oniceconnectionstatechange = function() {
       console.log('== ice connection status=' + peer.iceConnectionState);
+      if (peer.iceConnectionState == 'completed') {
+        console.log("candidate complete");
+      }
       if (peer.iceConnectionState === 'disconnected') {
         console.log('-- disconnected --');
         hangUp();
@@ -460,28 +474,33 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     }
 
     peer.addEventListener("addstream", onRemoteStreamAdded, false);
-    peer.addEventListener("removestream", onRemoteStreamRemoved, false)
+    peer.addEventListener("removestream", onRemoteStreamRemoved, false);
+
     function onRemoteStreamAdded(event) {
       remoteVideo.src = window.webkitURL.createObjectURL(event.stream);
     }
+
     function onRemoteStreamRemoved(event) {
       remoteVideo.src = "";
     }
     return peer;
   }
-  /*
+ /*
   function makeOffer() {
-    unsubscribe("offer");  // offerの待ち受けを解除
-    subscribe("answer");  // answerを待ち受ける
+    unsubscribe("offer");   // offerの待ち受けを解除
+    subscribe("answer");    // answerを待ち受ける
     peerConnection = prepareNewConnection();
     peerConnection.createOffer(function (sessionDescription) { // in case of success
+      console.log('createOffer() succsess in promise');
       peerConnection.setLocalDescription(sessionDescription);
     }, function () { // in case of error
       console.log("Create Offer failed");
     }, mediaConstraints);
   }
 */
-  function makeOffer() {  // Offer SDPを作成し送信する
+  function makeOffer() {    // SDPを作成し送信する
+    unsubscribe("offer");   // offerの待ち受けを解除
+    subscribe("answer");    // answerを待ち受ける
     peerConnection = prepareNewConnection();  // RTCPeerConnectionを生成し、必要なメッセージハンドラを設定
     peerConnection.createOffer()              // Offer SDPを生成 （非同期で処理が行われるので、.then()で受け止める。Promise）
       .then(function (sessionDescription) {
@@ -493,7 +512,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
         // Trickle Ice の場合ここで置くる
         // sendSdp(peerConnection.localDescription);   // ローカルSDPを相手に送る。(Trickle ICE 処理)
 
-      }).catch(function(err) {
+      }).catch(function(err) {  // エラー
         console.error(err);
       });
   }
