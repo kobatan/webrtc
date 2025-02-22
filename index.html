@@ -112,6 +112,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   }
 
   function onMessageArrived(message) {
+    console.log('onMessageArrived()');
     if (message.destinationName === buildTopic('offer')) {  // "offer"トピックが来たら
       console.log('Received offer SDP ...');
       textToReceiveSdp.value = message.sdp;
