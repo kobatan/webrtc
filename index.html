@@ -110,7 +110,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   }
 
   function unsubscribe(subtitle) {    // 購読予約を解除する
-    var topic = buildTopic(subtitl);  // topic名を生成
+    var topic = buildTopic(subtitle);  // topic名を生成
     client.unsubscribe(topic);        // topic名の予約を解除する
   }
 
