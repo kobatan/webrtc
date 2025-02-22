@@ -102,6 +102,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   
   function buildTopic(subtitle) {   // topic名を作成
     var topic = user_name + '/signaling/' + subtitle;
+    console.log('topic:' + topic);
     return topic;
   }
 
