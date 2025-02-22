@@ -102,7 +102,6 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 
   client.on('connect', function () {  // 接続出来たら
     console.log('MQTT Connected');
-//    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
     subscribe('offer'); // offerを待ち受ける。(subscribe=購読する)
   })
 
@@ -111,7 +110,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
    return topic;
   }
 
-   client.onMessageArrived = function(message){
+  function onMessageArrived(message) {
     console.log('onMessageArrived()');
     if (message.destinationName === buildTopic('offer')) {  // "offer"トピックが来たら
       console.log('Received offer SDP ...');
@@ -165,6 +164,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   }
 
   function subscribe(subtitle) {      // 購読予約する
+    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
     var topic = buildTopic(subtitle); // topic名を生成
     client.subscribe(topic);          // topicで待ち受ける
   }
@@ -425,7 +425,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
         {"urls": "stun:stun2.l.google.com:19302"},
       ],
     });
-
+    
     // SDPの交換が終わると、P2P通信に相手の映像/音声が含まれていればイベントが発生します。
     peer.ontrack = function(event) {     // .ontrackイベントが発生したら
       console.log('peer.ontrack()');
