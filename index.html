@@ -102,7 +102,6 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   
   function buildTopic(subtitle) {   // topic名を作成
     var topic = user_name + '/signaling/' + subtitle;
-    console.log('topic:' + topic);
     return topic;
   }
 
@@ -176,19 +175,24 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 //    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
     var topic = buildTopic(subtitle); // topic名を生成
     client.subscribe(topic);          // topicで待ち受ける
+    console.log('subscribe topic = ' + topic);
   }
 
   function unsubscribe(subtitle) {    // 購読予約を解除する
     var topic = buildTopic(subtitle);  // topic名を生成
     client.unsubscribe(topic);        // topic名の予約を解除する
+    console.log('unsubscribe topic = ' + topic);    
   }
 
   function sendSDPTextMQTT(subtitle, text){
    textForSendSdp.value = text;  // テキストエリアに表示 
+
    var topic = buildTopic(subtitle);
+
    message = new Paho.Message(text);
    message.destinationName = topic;
    client.publish(topic, text);
+   console.log('publish topic = ' + topic);
   }
 /*
   function sendSdp(sessionDescription) {  // wsでSDPを送信する
@@ -465,6 +469,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
 //      sendSdp(peer.localDescription);
+
         sendSDPTextMQTT(peer.localDescription.type, peer.localDescription.sdp);
       }
     };
