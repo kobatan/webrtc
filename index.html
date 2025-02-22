@@ -2,16 +2,16 @@
 <html>
 <head>
  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
- <title>WebSocket MQTT</title>
+ <title>WebRTC</title>
  <script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.js"></script>
  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.js"></script>
- 
+<!-- <script src="https://git.eclipse.org/c/paho/org.eclipse.paho.mqtt.javascript.git/plain/src/mqttws31.js"></script>-->
+
 </head>
 <body>
-  WebRTC<br/>
+  <div>WebRTC</div>
   <button type="button" onclick="startVideo();">Start Video</button>
   <button type="button" onclick="stopVideo();">Stop Video</button>
-  &nbsp;
   <button type="button" onclick="connect();">Connect</button>
   <button type="button" onclick="hangUp();">Hang Up</button> 
   <div>
@@ -19,14 +19,11 @@
     <video id="remote_video" autoplay style="width: 240px; height: 180px; border: 1px solid black;"></video>
   </div>
   <p>SDP to send:<br />
-    <textarea id="text_for_send_sdp" rows="5" cols="60" readonly="readonly">SDP to send</textarea>
+    <text id="text_for_send_sdp" rows="5" cols="60" readonly="readonly"></textarea>
   </p>
   <p>SDP received:&nbsp;
-    <!--
-    <button type="button" onclick="onSdpText();">Receive remote SDP</button>
-    -->
     <br />
-    <textarea id="text_for_receive_sdp" rows="5" cols="60"></textarea>
+    <text id="text_for_receive_sdp" rows="5" cols="60"></textarea>
   </p>
 </body>
 <script type="text/javascript">
@@ -35,6 +32,14 @@
   let remoteVideo = document.getElementById('remote_video');
   let localStream = null;
   let peerConnection = null;
+  let peerStarted = false;
+  var mediaConstraints = {
+    'mandatory': {
+      'OfferToReceiveAudio':true,
+      'OfferToReceiveVideo':true,
+    }
+  };
+
   let textForSendSdp = document.getElementById('text_for_send_sdp');
   let textToReceiveSdp = document.getElementById('text_for_receive_sdp');
   // --- prefix -----
@@ -43,7 +48,8 @@
   RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
   RTCSessionDescription = window.RTCSessionDescription || window.webkitRTCSessionDescription || window.mozRTCSessionDescription;
 
-// EMQX ブローカー  
+
+// EMQX MQTTブローカー  に接続 =============================
 // Server: broker.emqx.io
 // TCP Port: 1883
 // WebSocket Port: 8083
@@ -103,6 +109,58 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   function buildTopic(subtitle) {   // topic名を作成
    var topic = user_name + '/signaling/' + subtitle;
    return topic;
+  }
+
+  function onMessageArrived(message) {
+    if (message.destinationName === buildTopic('offer')) {  // "offer"トピックが来たら
+      console.log('Received offer SDP ...');
+      textToReceiveSdp.value = message.sdp;
+//      let offer = new RTCSessionDescription(message);
+//      setOffer(offer);  
+      onOfferText(message.payloadString); // offer SDP を
+    }
+    else if (message.destinationName === buildTopic('answer')) {  // "anser"トピックが来たら
+      console.log('Received answer SDP ...');
+      textToReceiveSdp.value = message.sdp;
+//    let answer = new RTCSessionDescription(message);
+//    setAnswer(answer);
+      onAnswerText(message.payloadString)
+    }
+    else if (message.destinationName === buildTopic('candidate')) {
+      // --- got ICE candidate ---
+      console.log('Received ICE candidate ...');
+      let candidate = new RTCIceCandidate(message.ice);
+      console.log(candidate);
+      addIceCandidate(candidate);   // 覚えさせる
+    }
+
+     else {
+       console.warn('Bad SDP topic');
+     }
+  }
+//=========================================================
+  // start PeerConnection
+  function connect() {
+    if (! peerConnection) { // まだコネクションが確立してなかったら
+      console.log('make Offer');
+      makeOffer();          //  Offer SDPを作成し送信する。（非同期処理）
+    }
+    else {
+      console.warn('peer already exist.');
+    }
+  }
+
+  // close PeerConnection
+  function hangUp() {
+    if (peerConnection) {
+      console.log('Hang up.');
+      peerConnection.close();
+      peerConnection = null;
+      pauseVideo(remoteVideo);
+    }
+    else {
+      console.warn('peer NOT exist.');
+    }
   }
 
   function subscribe(subtitle) {      // 購読予約する
@@ -196,34 +254,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     setAnswerText(text);
   }
 
-  function onMessageArrived(message) {
-     if (message.destinationName === buildTopic('answer')) {
-       console.log('Received answer ...');
-       textToReceiveSdp.value = message.sdp;
-//       let answer = new RTCSessionDescription(message);
-//       setAnswer(answer);
-       onAnswerText(message.payloadString)
-     }
-     else if (message.destinationName === buildTopic('offer')) {
-      console.log('Received offer ...');
-      textToReceiveSdp.value = message.sdp;
-//      let offer = new RTCSessionDescription(message);
-//      setOffer(offer);  
-      onOfferText(message.payloadString)
-     }
-/*    
-     else if (message.destinationName === buildTopic('candidate')) {
-      // --- got ICE candidate ---
-      console.log('Received ICE candidate ...');
-      let candidate = new RTCIceCandidate(message.ice);
-      console.log(candidate);
-      addIceCandidate(candidate);   // 覚えさせる
-    }
-*/
-     else {
-       console.warn('Bad SDP topic');
-     }
-  }
+  
 /*
   // Receive messages
   client.on('message', function (topic, message) {
@@ -383,10 +414,10 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
  */
 
   // ---------------------- connection handling -----------------------
-  function prepareNewConnection() {
+  function prepareNewConnection() {     // 通信相手ごとに作る
      var peer = new RTCPeerConnection({                // RTCPeerConnectionを初期化 
-//      offerToReceiveAudio: 1,
-//      offerToReceiveVideo: 0,
+  //    offerToReceiveAudio: 1,
+  //    offerToReceiveVideo: 0,
       iceServers: [
         {"urls": "stun:stun.l.google.com:19302"},     // グローバルアドレスを得る
         {"urls": "stun:stun1.l.google.com:19302"},
@@ -394,23 +425,24 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
       ],
     });
 
-    // --- on get remote stream ---
     // SDPの交換が終わると、P2P通信に相手の映像/音声が含まれていればイベントが発生します。
-    if ('ontrack' in peer) {
-      peer.ontrack = function(event) {     // .ontrackイベントが発生したら
-        console.log('-- peer.ontrack()');
-        let stream = event.streams[0];
-        playVideo(remoteVideo, stream);    // 映像を再生する
-      };
+    peer.ontrack = function(event) {     // .ontrackイベントが発生したら
+      console.log('peer.ontrack()');
+      let stream = event.streams[0];
+      playVideo(remoteVideo, stream);    // 映像を再生する
+    };
+
+    peer.addEventListener("addstream", onRemoteStreamAdded, false);
+    peer.addEventListener("removestream", onRemoteStreamRemoved, false);
+
+    function onRemoteStreamAdded(event) {
+      remoteVideo.src = window.webkitURL.createObjectURL(event.stream);
     }
-    else {
-      peer.onaddstream = function(event) {  // .onaddstreamイベントは非推奨になりました。（旧ブラウザ用）
-        console.log('-- peer.onaddstream()');
-        let stream = event.stream;
-        playVideo(remoteVideo, stream);     // 映像を再生する
-      };
+
+    function onRemoteStreamRemoved(event) {
+      remoteVideo.src = "";
     }
-   
+
     peer.onicecandidate = function (evt) { // local ICE candidateが収集される度に呼び出される。
       if (evt.candidate) {                // ICE candidate が収集された場合
         console.log(evt.candidate);
@@ -473,32 +505,9 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     else {
       console.warn('no local stream, but continue.');
     }
-
-    peer.addEventListener("addstream", onRemoteStreamAdded, false);
-    peer.addEventListener("removestream", onRemoteStreamRemoved, false);
-
-    function onRemoteStreamAdded(event) {
-      remoteVideo.src = window.webkitURL.createObjectURL(event.stream);
-    }
-
-    function onRemoteStreamRemoved(event) {
-      remoteVideo.src = "";
-    }
     return peer;
   }
- /*
-  function makeOffer() {
-    unsubscribe("offer");   // offerの待ち受けを解除
-    subscribe("answer");    // answerを待ち受ける
-    peerConnection = prepareNewConnection();
-    peerConnection.createOffer(function (sessionDescription) { // in case of success
-      console.log('createOffer() succsess in promise');
-      peerConnection.setLocalDescription(sessionDescription);
-    }, function () { // in case of error
-      console.log("Create Offer failed");
-    }, mediaConstraints);
-  }
-*/
+
   function makeOffer() {    // SDPを作成し送信する
     unsubscribe("offer");   // offerの待ち受けを解除
     subscribe("answer");    // answerを待ち受ける
@@ -506,6 +515,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     peerConnection.createOffer()              // Offer SDPを生成 （非同期で処理が行われるので、.then()で受け止める。Promise）
       .then(function (sessionDescription) {
         console.log('createOffer() succsess in promise');
+        console.log('type:' + sessionDescription.type);
         return peerConnection.setLocalDescription(sessionDescription);  // 生成したOffer SDPを、ローカルに記録。（非同期で処理が行われるので、.then()で受け止める。Promise）
       }).then(function() {
         console.log('setLocalDescription() succsess in promise');
@@ -579,29 +589,5 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     }
   }
   
-  // start PeerConnection
-  function connect() {
-    if (! peerConnection) { // まだコネクションが確立してなかったら
-      console.log('make Offer');
-      makeOffer();          //  Offer SDPを作成し送信する。（非同期処理）
-    }
-    else {
-      console.warn('peer already exist.');
-    }
-  }
-
-  // close PeerConnection
-  function hangUp() {
-    if (peerConnection) {
-      console.log('Hang up.');
-      peerConnection.close();
-      peerConnection = null;
-      pauseVideo(remoteVideo);
-    }
-    else {
-      console.warn('peer NOT exist.');
-    }
-  }
-
 </script>
 </html>
