@@ -3,7 +3,8 @@
 <head>
  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
  <title>WebSocket MQTT</title>
- <script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.min.js"></script>
+ <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script> 
 </head>
 <body>
   WebSocket Signaling 1to1<br />
@@ -114,9 +115,10 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   function sendSDPTextMQTT(subtitle, text){
    textForSendSdp.value = text;  // テキストエリアに表示 
    var topic = buildTopic(subtitle);
-   message = new Messaging.Message(text);
+   message = new Paho.MQTT.Message(text);
    message.destinationName = topic;
    client.send(message);
+   
   }
 
   function sendSdp(sessionDescription) {  // wsでSDPを送信する
