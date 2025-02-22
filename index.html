@@ -19,7 +19,7 @@
     <video id="remote_video" autoplay style="width: 240px; height: 180px; border: 1px solid black;"></video>
   </div>
   <p>SDP to send:<br />
-    <textarea id="text_for_send_sdp" rows="5" cols="60" readonly="readonly"></textarea>
+    <textarea id="text_for_send_sdp" rows="5" cols="60" readonly="readonly" required></textarea>
   </p>
   <p>SDP received:&nbsp;
     <br />
@@ -96,7 +96,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 //    rejectUnauthorized: true,
     ca: TRUSTED_CA_LIST,    // CA証明書
   }
-  console.log('Connecting mqtt client ...');
+  console.log('Connecting mqtt client ... clientId=' + clientId);
   const client  = mqtt.connect(host, options); // 接続する
 //  const client = new Paho.MQTT.Client(host, Number(8084), clientId);
   
@@ -175,24 +175,21 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 //    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
     var topic = buildTopic(subtitle); // topic名を生成
     client.subscribe(topic);          // topicで待ち受ける
-    console.log('subscribe topic = ' + topic);
+    console.log('Subscribe topic = ' + topic + 'ID:' + clientId);
   }
 
   function unsubscribe(subtitle) {    // 購読予約を解除する
     var topic = buildTopic(subtitle);  // topic名を生成
     client.unsubscribe(topic);        // topic名の予約を解除する
-    console.log('unsubscribe topic = ' + topic);    
+    console.log('unSubscribe topic = ' + topic);    
   }
 
   function sendSDPTextMQTT(subtitle, text){
-   textForSendSdp.value = text;  // テキストエリアに表示 
-
    var topic = buildTopic(subtitle);
-
    message = new Paho.Message(text);
    message.destinationName = topic;
    client.publish(topic, text);
-   console.log('publish topic = ' + topic);
+   console.log('Publish topic = ' + topic + 'ID:' + clientId);
   }
 /*
   function sendSdp(sessionDescription) {  // wsでSDPを送信する
@@ -464,13 +461,15 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
         // Tricle ICE の場合は、ここでICE candidateを相手に送る
         // sendIceCandidate(evt.candidate);  // ICE candidateを相手に送る (Trickle ICE の場合)
 
-      } else {                            // ICE candidateの収集が完了した時
-        console.log('empty ice event');
+      } else {                              // ICE candidateの収集が完了した時
+        console.log('ICE candidate compleat.');
+        let type = peer.localDescription.type;
+        let sdp  = peer.localDescription.sdp;
+        console.log('local SDP type: ' + type);
+        textForSendSdp.value = sdp;              // テキストエリア(送信用)に表示 
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
-//      sendSdp(peer.localDescription);
-
-        sendSDPTextMQTT(peer.localDescription.type, peer.localDescription.sdp);
+        sendSDPTextMQTT(type, sdp);             // シグナリング(MQTT)に送信
       }
     };
 
@@ -530,10 +529,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     peerConnection.createOffer()              // Offer SDPを生成 （非同期で処理が行われるので、.then()で受け止める。Promise）
       .then(function (sessionDescription) {
         console.log('createOffer() succsess in promise. type = ' + sessionDescription.type);
-        //textForSendSdp.value = sessionDescription.toString();  // テキストエリアに表示    
         textForSendSdp.value = sessionDescription.sdp.toString();  // テキストエリアに表示        
         return peerConnection.setLocalDescription(sessionDescription);  // 生成したOffer SDPを、ローカルに記録。（非同期で処理が行われるので、.then()で受け止める。Promise）
-        //return peerConnection.setLocalDescription(sessionDescription);  // 生成したOffer SDPを、ローカルに記録。（非同期で処理が行われるので、.then()で受け止める。Promise）
       }).then(function() {
         console.log('setLocalDescription() succsess in promise');
         // Vanilla ICE の場合には、まだSDPは送らない 
