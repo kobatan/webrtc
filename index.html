@@ -99,19 +99,19 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   console.log('Connecting mqtt client ...');
   const client  = mqtt.connect(host, options); // 接続する
 //  const client = new Paho.MQTT.Client(host, Number(8084), clientId);
+  
+  function buildTopic(subtitle) {   // topic名を作成
+    var topic = user_name + '/signaling/' + subtitle;
+    return topic;
+  }
 
   client.on('connect', function () {  // 接続出来たら
     console.log('MQTT Connected');
     subscribe('offer'); // offerを待ち受ける。(subscribe=購読する)
   })
 
-  function buildTopic(subtitle) {   // topic名を作成
-   var topic = user_name + '/signaling/' + subtitle;
-   return topic;
-  }
-
-  client.on('message', function(topic, message){
-    console.log('onMessageArrived()');
+  client.on('message', function(topic, message, packet){
+    console.log('Topic: ${topic}, Message: ${message.toString()}, QoS: ${packet.qos}');
     if (topic === buildTopic('offer')) {  // "offer"トピックが来たら
       console.log('Received offer SDP ...');
       textToReceiveSdp.value = message.sdp;
@@ -133,10 +133,17 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
       console.log(candidate);
       addIceCandidate(candidate);   // 覚えさせる
     }
-
      else {
        console.warn('Bad SDP topic');
      }
+  })
+  
+  client.on('reconnect', function () {  // 切断後に再接続でトリガ
+    console.log('Reconnecting...');
+  })
+
+  client.on('close', function () {      // 切断後にトリガ
+    console.log('Disconnected')
   })
 
 //=========================================================
