@@ -175,7 +175,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 //    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
     var topic = buildTopic(subtitle); // topic名を生成
     client.subscribe(topic);          // topicで待ち受ける
-    console.log('Subscribe topic = ' + topic + 'ID:' + clientId);
+    console.log('Subscribe topic = ' + topic);
+    console.log('client ID: ' + clientId);
   }
 
   function unsubscribe(subtitle) {    // 購読予約を解除する
@@ -189,7 +190,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
    message = new Paho.Message(text);
    message.destinationName = topic;
    client.publish(topic, text);
-   console.log('Publish topic = ' + topic + 'ID:' + clientId);
+   console.log('Publish topic = ' + topic);
+   console.log('client ID: ' + clientId);
   }
 /*
   function sendSdp(sessionDescription) {  // wsでSDPを送信する
