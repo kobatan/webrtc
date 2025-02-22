@@ -114,7 +114,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   function sendSDPTextMQTT(subtitle, text){
    textForSendSdp.value = text.sdp;  // テキストエリアに表示 
    var topic = buildTopic(subtitle);
-   message.message = text;
+   message = new MQTT.Message(text);
    message.destinationName = topic;
    client.send(message);
   }
