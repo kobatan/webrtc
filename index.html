@@ -116,7 +116,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   function sendSDPTextMQTT(subtitle, text){
    textForSendSdp.value = text;  // テキストエリアに表示 
    var topic = buildTopic(subtitle);
-   message = new Paho.MQTT.Message(text);
+   message = new Paho.MQTT.message(text);
    message.destinationName = topic;
    client.send(message);
    
