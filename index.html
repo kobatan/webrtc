@@ -529,8 +529,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     peerConnection = prepareNewConnection();  // RTCPeerConnectionを生成し、必要なメッセージハンドラを設定
     peerConnection.createOffer()              // Offer SDPを生成 （非同期で処理が行われるので、.then()で受け止める。Promise）
       .then(function (sessionDescription) {
-        console.log('createOffer() succsess in promise');
-        console.log('type:' + sessionDescription.type);
+        console.log('createOffer() succsess in promise. type = ' + sessionDescription.type);
+        textForSendSdp.value = essionDescription.toString();  // テキストエリアに表示        
         return peerConnection.setLocalDescription(sessionDescription);  // 生成したOffer SDPを、ローカルに記録。（非同期で処理が行われるので、.then()で受け止める。Promise）
       }).then(function() {
         console.log('setLocalDescription() succsess in promise');
