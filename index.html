@@ -119,7 +119,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
    message = new Paho.Message(text);
    message.destinationName = topic;
 //   client.send(message);
-   client.publish(tokic, text);  
+   client.publish(topic, text);  
   }
 
   function sendSdp(sessionDescription) {  // wsでSDPを送信する
