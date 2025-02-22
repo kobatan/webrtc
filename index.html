@@ -530,8 +530,10 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     peerConnection.createOffer()              // Offer SDPを生成 （非同期で処理が行われるので、.then()で受け止める。Promise）
       .then(function (sessionDescription) {
         console.log('createOffer() succsess in promise. type = ' + sessionDescription.type);
-        textForSendSdp.value = sessionDescription.toString();  // テキストエリアに表示        
-        return peerConnection.setLocalDescription(sessionDescription);  // 生成したOffer SDPを、ローカルに記録。（非同期で処理が行われるので、.then()で受け止める。Promise）
+        //textForSendSdp.value = sessionDescription.toString();  // テキストエリアに表示    
+        textForSendSdp.value = sessionDescription.sdp.toString();  // テキストエリアに表示        
+        return peerConnection.setLocalDescription(sessionDescription.sdp);  // 生成したOffer SDPを、ローカルに記録。（非同期で処理が行われるので、.then()で受け止める。Promise）
+        //return peerConnection.setLocalDescription(sessionDescription);  // 生成したOffer SDPを、ローカルに記録。（非同期で処理が行われるので、.then()で受け止める。Promise）
       }).then(function() {
         console.log('setLocalDescription() succsess in promise');
         // Vanilla ICE の場合には、まだSDPは送らない 
