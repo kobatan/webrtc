@@ -110,23 +110,23 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
    return topic;
   }
 
-  function onMessageArrived(message) {
+  client.on('message', function(topic, message){
     console.log('onMessageArrived()');
-    if (message.destinationName === buildTopic('offer')) {  // "offer"トピックが来たら
+    if (topic === buildTopic('offer')) {  // "offer"トピックが来たら
       console.log('Received offer SDP ...');
       textToReceiveSdp.value = message.sdp;
 //      let offer = new RTCSessionDescription(message);
 //      setOffer(offer);  
-      onOfferText(message.payloadString); // offer SDP を
+      onOfferText(message.sdp); // offer SDP を
     }
-    else if (message.destinationName === buildTopic('answer')) {  // "anser"トピックが来たら
+    else if (topic === buildTopic('answer')) {  // "anser"トピックが来たら
       console.log('Received answer SDP ...');
       textToReceiveSdp.value = message.sdp;
 //    let answer = new RTCSessionDescription(message);
 //    setAnswer(answer);
-      onAnswerText(message.payloadString)
+      onAnswerText(message.sdp)
     }
-    else if (message.destinationName === buildTopic('candidate')) {
+    else if (topic === buildTopic('candidate')) {
       // --- got ICE candidate ---
       console.log('Received ICE candidate ...');
       let candidate = new RTCIceCandidate(message.ice);
@@ -137,7 +137,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
      else {
        console.warn('Bad SDP topic');
      }
-  }
+  })
+
 //=========================================================
   // start PeerConnection
   function connect() {
