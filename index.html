@@ -165,7 +165,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   }
 
   function subscribe(subtitle) {      // 購読予約する
-    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
+//    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
     var topic = buildTopic(subtitle); // topic名を生成
     client.subscribe(topic);          // topicで待ち受ける
   }
