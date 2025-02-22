@@ -96,7 +96,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 //    rejectUnauthorized: true,
     ca: TRUSTED_CA_LIST,    // CA証明書
   }
-  console.log('Connecting mqtt client ... clientId=' + clientId);
+  console.log('Connecting mqtt client ...');
+  console.log('clientId= ' + clientId);
   const client  = mqtt.connect(host, options); // 接続する
 //  const client = new Paho.MQTT.Client(host, Number(8084), clientId);
   
@@ -186,10 +187,10 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   }
 
   function sendSDPTextMQTT(subtitle, text){
-   var topic = buildTopic(subtitle);
-   message = new Paho.Message(text);
-   message.destinationName = topic;
-   client.publish(topic, text);
+   var topic = buildTopic(subtitle);  // topic名を決める
+//   message = new Paho.Message(text);  // messageを作る
+//   message.destinationName = topic;
+   client.publish(topic, text);       // 送信する
    console.log('Publish topic = ' + topic);
    console.log('client ID: ' + clientId);
   }
@@ -525,8 +526,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   }
 
   function makeOffer() {    // SDPを作成し送信する
-    unsubscribe("offer");   // offerの待ち受けを解除
-    subscribe("answer");    // answerを待ち受ける
+  //  unsubscribe("offer");   // offerの待ち受けを解除
+  //  subscribe("answer");    // answerを待ち受ける
     peerConnection = prepareNewConnection();  // RTCPeerConnectionを生成し、必要なメッセージハンドラを設定
     peerConnection.createOffer()              // Offer SDPを生成 （非同期で処理が行われるので、.then()で受け止める。Promise）
       .then(function (sessionDescription) {
