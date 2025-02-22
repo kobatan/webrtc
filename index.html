@@ -102,7 +102,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 
   client.on('connect', function () {  // 接続出来たら
     console.log('MQTT Connected');
-    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
+//    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
     subscribe('offer'); // offerを待ち受ける。(subscribe=購読する)
   })
 
@@ -111,7 +111,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
    return topic;
   }
 
-  function onMessageArrived(message) {
+   client.onMessageArrived = function(message){
     console.log('onMessageArrived()');
     if (message.destinationName === buildTopic('offer')) {  // "offer"トピックが来たら
       console.log('Received offer SDP ...');
