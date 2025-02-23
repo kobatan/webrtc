@@ -90,7 +90,10 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   const broker = 'ebb8eeee.ala.asia-southeast1.emqxsl.com';
   var user_name = "user"; 
   var pass = "password";  
-  let host = 'wss://' + broker + ':8084/mqtt';  // MQTTブローカー
+  let host = 'wss://' + broker + ':8084/mqtt';              // MQTTブローカー
+  const topic_offer = user_name + '/signaling/offer';       // MQTT用のトピック名を決めて置く
+  const topic_answer = user_name + '/signaling/answer';
+  const topic_candidate = user_name + '/signaling/candidate';
 
   const options = {  // Create an MQTT client instance
     keepalive:60,
@@ -108,14 +111,11 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     ca: TRUSTED_CA_LIST,    // CA証明書
   }
   console.log('clientId= ' + clientId);
-  console.log('Connecting mqtt client ...');
-  status.textContent = 'Connecting mqtt client ...';
-  const client  = mqtt.connect(host, options); // MQTT（シグナリングサーバー）に接続する
-//  const client = new Paho.MQTT.Client(host, Number(8084), clientId);
+  console.log('Connecting MQTT client ...');
+  status.textContent = 'Connecting MQTT client ...';
 
-  const topic_offer = user_name + '/signaling/offer';       // MQTT用のトピック名を決めて置く
-  const topic_answer = user_name + '/signaling/answer';
-  const topic_candidate = user_name + '/signaling/candidate';
+  const client  = mqtt.connect(host, options); // MQTT（シグナリングサーバー）に接続する
+
   function buildTopic(subtitle) {   // topic名をその都度作成
     var topic = user_name + '/signaling/' + subtitle;
     return topic;
@@ -129,21 +129,21 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 
   client.on('message', function(topic, message, packet){  // MQTT にメッセージが来たら呼ばれる
     status.textContent = 'MQTT message recived';
-    console.log(`onmessage ==> Topic: ${topic}, QoS: ${packet.qos}`);
+    console.log(`MQTT: onmessage ==> Topic: ${topic}, QoS: ${packet.qos}`);
     switch(topic){
       case topic_offer:   // "offer"トピックが来たら
-        console.log('Received offer SDP ...');
+        console.log('MQTT: Received offer SDP ...');
         textToReceiveSdp.value = message.sdp;
         setOfferText(message.sdp);  // 新たなpeer接続を作り。 相手のSDPをセットする
         makeAnswer();               // 自分のSDPをanswerにセットする
         break;
       case topic_answer:  // "anser"トピックが来たら
-        console.log('Received answer SDP ...');
+        console.log('MQTT: Received answer SDP ...');
         textToReceiveSdp.value = message.sdp;
         setAnswerText(message.sdp); // 相手SDPをpeerにセットする
         break;
       case topic_candidate:         // ICE candidateが来たら
-        console.log('Received ICE candidate ...');
+        console.log('MQTT: Received ICE candidate ...');
         let candidate = new RTCIceCandidate(message.ice);
         console.log(candidate);
         addIceCandidate(candidate);   // 覚えさせる
@@ -155,30 +155,30 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   
   client.on('reconnect', function () {  // 切断後に再接続でトリガ
     status.textContent = 'MQTT reconnect';   
-    console.log('Reconnecting...');
+    console.log('MQTT: Reconnecting...');
   })
 
   client.on('close', function () {      // 切断後にトリガ
     status.textContent = 'MQTT close';
-    console.log('Disconnected')
+    console.log('MQTT: Disconnected')
   })
 
 //=========================================================
   // start PeerConnection
   function connect() {
     if (! peerConnection) { // まだコネクションが確立してなかったら
-      console.log('make Offer');
+      console.log('Peer: make Offer');
       makeOffer();          //  Offer SDPを作成し送信する。（非同期処理）
     }
     else {
-      console.warn('peer already exist.');
+      console.warn('Peer: already exist.');
     }
   }
 
   // close PeerConnection
   function hangUp() {
     if (peerConnection) {
-      console.log('Hang up.');
+      console.log('Peer: Hang up.');
       peerConnection.close();
       peerConnection = null;
       pauseVideo(remoteVideo);
@@ -192,14 +192,14 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 //    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
     var topic = buildTopic(subtitle); // topic名を生成
     client.subscribe(topic);          // topicで待ち受ける
-    console.log('client ID: ' + clientId);
-    console.log('Subscribe topic = ' + topic);
+    console.log('MQTT: client ID: ' + clientId);
+    console.log('MQTT: Subscribe topic = ' + topic);
   }
 
   function unsubscribe(subtitle) {    // 購読予約を解除する
     var topic = buildTopic(subtitle);  // topic名を生成
     client.unsubscribe(topic);        // topic名の予約を解除する
-    console.log('unSubscribe topic = ' + topic);    
+    console.log('MQTT: unSubscribe topic = ' + topic);    
   }
 
   function sendSDPTextMQTT(subtitle, text){
@@ -207,8 +207,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 //   message = new Paho.Message(text);  // messageを作る
 //   message.destinationName = topic;
    client.publish(topic, text);       // 送信する
-   console.log('client ID: ' + clientId);
-   console.log('Publish topic = ' + topic);
+   console.log('MQTT: client ID: ' + clientId);
+   console.log('MQTT: Publish topic = ' + topic);
   }
 /*
   function sendSdp(sessionDescription) {  // wsでSDPを送信する
@@ -240,7 +240,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   
   function setAnswerText(text) {
     if (! peerConnection) {
-      console.error('peerConnection NOT exist!');
+      console.error('Peer: peerConnection NOT exist!');
       return;
     }
     var answer = new RTCSessionDescription({
@@ -251,15 +251,15 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   }
 
   function makeAnswer(evt) {
-    console.log('sending Answer. Creating remote session description...' );
+    console.log('Peer: sending Answer. Creating remote session description...' );
     if (! peerConnection) {
-      console.error('peerConnection NOT exist!');
+      console.error('Peer: peerConnection NOT exist!');
       return;
     }
     peerConnection.createAnswer(function (sessionDescription) { // in case of success
       peerConnection.setLocalDescription(sessionDescription);   // 自分のSDPをセットする
     }, function () { // in case of error
-      console.log("Create Answer failed");
+      console.log("Peer: Create Answer failed");
     }, mediaConstraints);
   }
 /*
@@ -281,7 +281,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   }
 
   function onAnswerText(text) {
-    console.log("Received answer text...")
+    console.log("Peer: Received answer text...")
     setAnswerText(text);
   }
 
@@ -458,7 +458,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     
     // SDPの交換が終わると、P2P通信に相手の映像/音声が含まれていればイベントが発生します。
     peer.ontrack = function(event) {     // .ontrackイベントが発生したら
-      console.log('peer.ontrack()');
+      console.log('Peer: peer.ontrack()');
       let stream = event.streams[0];
       playVideo(remoteVideo, stream);    // 映像を再生する
     };
@@ -476,17 +476,17 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 
     peer.onicecandidate = function (evt) { // local ICE candidateが収集される度に呼び出される。
       if (evt.candidate) {                // ICE candidate が収集された場合
-        console.log('Peer type : ' + evt.candidate.type);
+        console.log('Peer: type' + evt.candidate.type);
         console.log(evt.candidate);
         // Vanilla ICE の場合には、何もしない
         // Tricle ICE の場合は、ここでICE candidateを相手に送る
         // sendIceCandidate(evt.candidate);  // ICE candidateを相手に送る (Trickle ICE の場合)
 
       } else {                              // ICE candidateの収集が完了した時
-        console.log('ICE candidate compleat.');
+        console.log('Peer: ICE candidate compleat.');
         let type = peer.localDescription.type;
         let sdp  = peer.localDescription.sdp;
-        console.log('local SDP type: ' + type);
+        console.log('Peer: local SDP type: ' + type);
         textForSendSdp.value = sdp;              // テキストエリア(送信用)に表示 
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
@@ -496,49 +496,49 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 
     // --- when need to exchange SDP ---
     peer.onnegotiationneeded = function(evt) {
-      console.log('-- onnegotiationneeded() ---');
+      console.log('Peer: -- onnegotiationneeded() ---');
     };
 
     // --- other events ----
     peer.onicecandidateerror = function (evt) {
-      console.error('ICE candidate ERROR:', evt);
+      console.error('Peer: ICE candidate ERROR:', evt);
     };
 
     peer.onsignalingstatechange = function() {
-      console.log('== signaling status=' + peer.signalingState);
+      console.log('Peer: == signaling status=' + peer.signalingState);
     };
 
     peer.oniceconnectionstatechange = function() {
-      console.log('== ice connection status=' + peer.iceConnectionState);
+      console.log('Peer: == ice connection status=' + peer.iceConnectionState);
       if (peer.iceConnectionState == 'completed') {
-        console.log("candidate complete");
+        console.log("Peer: candidate complete");
       }
       if (peer.iceConnectionState === 'disconnected') {
-        console.log('-- disconnected --');
+        console.log('Peer: -- disconnected --');
         hangUp();
       }
     };
 
     peer.onicegatheringstatechange = function() {
-      console.log('==***== ice gathering state=' + peer.iceGatheringState);
+      console.log('Peer: ==***== ice gathering state=' + peer.iceGatheringState);
     };
     
     peer.onconnectionstatechange = function() {
-      console.log('==***== connection state=' + peer.connectionState);
+      console.log('Peer: ==***== connection state=' + peer.connectionState);
     };
 
     peer.onremovestream = function(event) {
-      console.log('-- peer.onremovestream()');
+      console.log('Peer: -- peer.onremovestream()');
       pauseVideo(remoteVideo);
     };
     
     // 通信対象の映像/音声ストリームを追加する
     if (localStream) {
-      console.log('Adding local stream...');
+      console.log('Peer: Adding local stream...');
       peer.addStream(localStream);
     }
     else {
-      console.warn('no local stream, but continue.');
+      console.warn('Peer: no local stream, but continue.');
     }
     return peer;
   }
@@ -550,11 +550,11 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 
     peerConnection.createOffer()              // Offer SDPを生成 （非同期で処理が行われるので、.then()で受け止める。Promise）
       .then(function (sessionDescription) {
-        console.log('createOffer() succsess in promise. type = ' + sessionDescription.type);
+        console.log('Peer: createOffer() succsess in promise. type = ' + sessionDescription.type);
 //        textForSendSdp.value = sessionDescription.sdp.toString();  // テキストエリアに表示        
         return peerConnection.setLocalDescription(sessionDescription);  // 生成したOffer SDPを、ローカルに記録。（非同期で処理が行われるので、.then()で受け止める。Promise）
       }).then(function() {
-        console.log('setLocalDescription() succsess in promise');
+        console.log('Peer: setLocalDescription() succsess in promise');
         // Vanilla ICE の場合には、まだSDPは送らない 
         // Trickle Ice の場合ここで置くる
         // sendSdp(peerConnection.localDescription);   // ローカルSDPを相手に送る。(Trickle ICE 処理)
@@ -567,31 +567,31 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 
   function setOffer(sessionDescription) { // offerメーッセージをリモートSDPにセット
     if (peerConnection) {
-      console.error('peerConnection alreay exist!');
+      console.error('Peer: peerConnection alreay exist!');
     }
     peerConnection = prepareNewConnection();
     peerConnection.setRemoteDescription(sessionDescription)
     .then(function() {
-      console.log('setRemoteDescription(offer) succsess in promise');
+      console.log('Peer: setRemoteDescription(offer) succsess in promise');
       makeAnswer();
     }).catch(function(err) {
-      console.error('setRemoteDescription(offer) ERROR: ', err);
+      console.error('Peer: setRemoteDescription(offer) ERROR: ', err);
     });
   }
   
   function makeAnswer() { // Anser SDP を作成し送信する
-    console.log('sending Answer. Creating remote session description...' );
+    console.log('Peer: sending Answer. Creating remote session description...' );
     if (! peerConnection) {
-      console.error('peerConnection NOT exist!');
+      console.error('Peer: peerConnection NOT exist!');
       return;
     }
     
     peerConnection.createAnswer() //  Answer SDPを生成(非同期処理)
       .then(function (sessionDescription) {
-        console.log('createAnswer() succsess in promise');
+        console.log('Peer: createAnswer() succsess in promise');
         return peerConnection.setLocalDescription(sessionDescription);  // 生成したAnswer SDPをローカルSDPにする。(Promiseを使った非同期処理で行われる。)
       }).then(function() {
-        console.log('setLocalDescription() succsess in promise');
+        console.log('Peer: setLocalDescription() succsess in promise');
         // Vanilla ICE の場合には、まだSDPは送らない
         // Tricle ICE の場合は送る
         //sendSdp(peerConnection.localDescription); // ローカルSDPを相手に送る(Trickle ICE の場合)
@@ -603,25 +603,26 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 
   function setAnswer(sessionDescription) {
     if (! peerConnection) {
-      console.error('peerConnection NOT exist!');
+      console.error('Peer: peerConnection NOT exist!');
       return;
     }
 
     peerConnection.setRemoteDescription(sessionDescription)
     .then(function() {
-      console.log('setRemoteDescription(answer) succsess in promise');
+      console.log('Peer: setRemoteDescription(answer) succsess in promise');
     }).catch(function(err) {
-      console.error('setRemoteDescription(answer) ERROR: ', err);
+      console.error('Peer: setRemoteDescription(answer) ERROR: ', err);
     });
   }
 
   // --- tricke ICE ---
   function addIceCandidate(candidate) {
     if (peerConnection) {
+      console.lpg('Peer: addIceCandidate');
       peerConnection.addIceCandidate(candidate);
     }
     else {
-      console.error('PeerConnection not exist!');
+      console.error('Peer: PeerConnection not exist!');
       return;
     }
   }
