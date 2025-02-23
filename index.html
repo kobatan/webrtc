@@ -110,8 +110,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 //    rejectUnauthorized: true,
     ca: TRUSTED_CA_LIST,    // CA証明書
   }
-  console.log('clientId= ' + clientId);
-  console.log('Connecting MQTT client ...');
+  console.log('MQTT: clientId= ' + clientId);
+  console.log('MQTT: Connecting MQTT client ...');
   status.textContent = 'Connecting MQTT client ...';
 
   const client  = mqtt.connect(host, options); // MQTT（シグナリングサーバー）に接続する
