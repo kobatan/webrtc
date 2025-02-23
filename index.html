@@ -405,7 +405,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
       element.src = window.URL.createObjectURL(stream);
     }
     element.volume = 1; // 0 or 1
-    element.play();
+    element.play(); // エラーになる
   }
 
   function pauseVideo(element) {
@@ -458,17 +458,17 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     });
     
     // SDPの交換が終わると、P2P通信に相手の映像/音声が含まれていればイベントが発生します。
-    peer.ontrack = function(event) {     // .ontrackイベントが発生したら
+    peer.ontrack = function(event) {        // .ontrackイベントが発生したら
       console.log('Peer: peer.ontrack() 映像・音声が送られて来ました。');
       let stream = event.streams[0];
-      playVideo(remoteVideo, stream);    // 映像を再生する
+      playVideo(remoteVideo, stream);       // 映像を再生する
     };
 
     peer.addEventListener("addstream", onRemoteStreamAdded, false);
     peer.addEventListener("removestream", onRemoteStreamRemoved, false);
 
     function onRemoteStreamAdded(event) {
-      remoteVideo.src = window.webkitURL.createObjectURL(event.stream); // エラーになる
+      playVideo(remoteVideo, event.stream); // 映像を再生する
     }
 
     function onRemoteStreamRemoved(event) {
