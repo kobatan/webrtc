@@ -300,6 +300,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   }
 
   function playVideo(element, stream) {
+    if(!iceCompleat) return;
     if ('srcObject' in element) {
       element.srcObject = stream;
     }
