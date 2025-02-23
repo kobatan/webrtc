@@ -118,6 +118,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   })
 
   client.on('message', function(topic, message, packet){
+    status.textContent = 'MQTT message recived';
     console.log(`onmessage ==> Topic: ${topic}, QoS: ${packet.qos}`);
     if (topic === buildTopic('offer')) {  // "offer"トピックが来たら
       console.log('Received offer SDP ...');
@@ -146,10 +147,12 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   })
   
   client.on('reconnect', function () {  // 切断後に再接続でトリガ
+    status.textContent = 'MQTT reconnect';   
     console.log('Reconnecting...');
   })
 
   client.on('close', function () {      // 切断後にトリガ
+    status.textContent = 'MQTT close';
     console.log('Disconnected')
   })
 
