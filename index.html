@@ -110,7 +110,6 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 //    rejectUnauthorized: true,
     ca: TRUSTED_CA_LIST,    // CA証明書
   }
-  console.log('MQTT: clientId= ' + clientId);
   console.log('MQTT: Connecting MQTT client ...');
   status.textContent = 'Connecting MQTT client ...';
 
@@ -192,7 +191,6 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 //    client.onMessageArrived = onMessageArrived;    // コールバック関数を登録します
     var topic = buildTopic(subtitle); // topic名を生成
     client.subscribe(topic);          // topicで待ち受ける
-    console.log('MQTT: client ID: ' + clientId);
     console.log('MQTT: Subscribe topic = ' + topic);
   }
 
@@ -208,7 +206,6 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 //   message.destinationName = topic;
     // 送信する
    client.publish(topic, text);    
-   console.log('MQTT: client ID: ' + clientId);
    console.log('MQTT: Publish topic = ' + topic);
   }
 /*
