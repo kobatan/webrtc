@@ -136,7 +136,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
         console.log('MQTT: Received offer SDP ...');
         textToReceiveSdp.value = message;
         setOfferText(message);      // 新たなpeer接続を作り。 相手のSDPをセットする
-//        makeAnswer();               // 自分のSDPをanswerにセットする
+        makeAnswer();               // 自分のSDPをanswerにセットする
         break;
       case topic_answer:  // "anser"トピックが来たら
         console.log('MQTT: Received answer SDP ...');
@@ -410,7 +410,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
         iceCompleat = true;
-        makeAnswer();               // 自分のSDPをanswerにセットする
+//        makeAnswer();               // 自分のSDPをanswerにセットする
         publish(type, sdp);         // シグナリング(MQTT)にSDPを投稿
       }
     };
