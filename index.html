@@ -122,7 +122,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   }
 
   client.on('connect', function () {  // MQTTに接続出来たら
-    console.log('MQTT Connected');
+    console.log('MQTT: Connected');
     status.textContent = 'MQTT Connected';
     subscribe('offer');               // offerを待ち受ける。(subscribe=購読する)
   })
