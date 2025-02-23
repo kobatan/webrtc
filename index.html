@@ -149,7 +149,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
         addIceCandidate(candidate);   // 覚えさせる
         break;
       default:
-        console.warn('Bad SDP topic');
+        console.warn('MQTT: Bad SDP topic');
     }
   })
   
@@ -206,7 +206,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
    var topic = buildTopic(subtitle);  // topic名を決める
 //   message = new Paho.Message(text);  // messageを作る
 //   message.destinationName = topic;
-   client.publish(topic, text);       // 送信する
+    // 送信する
+   client.publish(topic, text);    
    console.log('MQTT: client ID: ' + clientId);
    console.log('MQTT: Publish topic = ' + topic);
   }
@@ -403,8 +404,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     else {
       element.src = window.URL.createObjectURL(stream);
     }
+    element.volume = 1; // 0 or 1
     element.play();
-    element.volume = 10;
   }
 
   function pauseVideo(element) {
@@ -458,7 +459,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     
     // SDPの交換が終わると、P2P通信に相手の映像/音声が含まれていればイベントが発生します。
     peer.ontrack = function(event) {     // .ontrackイベントが発生したら
-      console.log('Peer: peer.ontrack()');
+      console.log('Peer: peer.ontrack() 映像・音声が送られて来ました。');
       let stream = event.streams[0];
       playVideo(remoteVideo, stream);    // 映像を再生する
     };
@@ -467,7 +468,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     peer.addEventListener("removestream", onRemoteStreamRemoved, false);
 
     function onRemoteStreamAdded(event) {
-      remoteVideo.src = window.webkitURL.createObjectURL(event.stream);
+      remoteVideo.src = window.webkitURL.createObjectURL(event.stream); // エラーになる
     }
 
     function onRemoteStreamRemoved(event) {
@@ -486,7 +487,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
         console.log('Peer: ICE candidate compleat.');
         let type = peer.localDescription.type;
         let sdp  = peer.localDescription.sdp;
-        console.log('Peer: local SDP Get. type: ' + type);
+        console.log('Peer: local SDP get. type: ' + type);
         textForSendSdp.value = sdp;              // テキストエリア(送信用)に表示 
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
