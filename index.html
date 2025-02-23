@@ -33,7 +33,7 @@
   
   let localVideo = document.getElementById('local_video');
   let remoteVideo = document.getElementById('remote_video');
-  var status = document.getElementById('status').textContent;
+  let status = document.getElementById('status');
   let localStream = null;
   let peerConnection = null;
   let peerStarted = false;
@@ -102,7 +102,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   }
   console.log('clientId= ' + clientId);
   console.log('Connecting mqtt client ...');
-  status = 'Connecting mqtt client ...';
+  status.textContent = 'Connecting mqtt client ...';
   const client  = mqtt.connect(host, options); // MQTT（シグナリングサーバー）に接続する
 //  const client = new Paho.MQTT.Client(host, Number(8084), clientId);
   
@@ -113,7 +113,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 
   client.on('connect', function () {  // MQTTに接続出来たら
     console.log('MQTT Connected');
-    status = 'MQTT Connected';
+    status.textContent = 'MQTT Connected';
     subscribe('offer');               // offerを待ち受ける。(subscribe=購読する)
   })
 
