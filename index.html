@@ -17,10 +17,10 @@
 </head>
 <body>
   <div>WebRTC</div>
-  <button type="button" onclick="startVideo();">Start Video</button>
-  <button type="button" onclick="stopVideo();">Stop Video</button>
-  <button type="button" onclick="connect();">Peer Connect</button>
-  <button type="button" onclick="hangUp();">Peer Hang Up</button> 
+  <button onclick="startVideo();">Start Video</button>
+  <button onclick="stopVideo();">Stop Video</button>
+  <button onclick="connect();" >Peer Connect</button>
+  <button onclick="hangUp();">Peer Hang Up</button> 
   <div>
     <video id="local_video" autoplay style="width: 240px; height: 180px; border: 1px solid black;"></video>
     <video id="remote_video" autoplay style="width: 240px; height: 180px; border: 1px solid black;"></video>
@@ -44,6 +44,8 @@
   let localStream = null;
   let peerConnection = null;
   let peerStarted = false;
+  let iceCompleat = false;
+
   var mediaConstraints = {
     'mandatory': {
       'OfferToReceiveAudio':true,
@@ -110,8 +112,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 //    rejectUnauthorized: true,
     ca: TRUSTED_CA_LIST,    // CA証明書
   }
-  console.log('MQTT: Connecting MQTT client ...');
-  status.textContent = 'Connecting MQTT client ...';
+  console.log('MQTT: Connecting MQTT Client ...');
+  status.textContent = 'Connecting MQTT Client ...';
 
   const client  = mqtt.connect(host, options); // MQTT（シグナリングサーバー）に接続する
 
@@ -133,8 +135,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
       case topic_offer:   // "offer"トピックが来たら
         console.log('MQTT: Received offer SDP ...');
         textToReceiveSdp.value = message;
-        setOfferText(message);  // 新たなpeer接続を作り。 相手のSDPをセットする
-        makeAnswer();               // 自分のSDPをanswerにセットする
+        setOfferText(message);      // 新たなpeer接続を作り。 相手のSDPをセットする
+//        makeAnswer();               // 自分のSDPをanswerにセットする
         break;
       case topic_answer:  // "anser"トピックが来たら
         console.log('MQTT: Received answer SDP ...');
@@ -153,7 +155,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   })
   
   client.on('reconnect', function () {  // 切断後に再接続でトリガ
-    status.textContent = 'MQTT reconnect';   
+    status.textContent = 'MQTT Reconnect';   
     console.log('MQTT: Reconnecting...');
   })
 
@@ -200,33 +202,12 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     console.log('MQTT: unSubscribe topic = ' + topic);    
   }
 
-  function sendSDPTextMQTT(subtitle, text){
-   var topic = buildTopic(subtitle);  // topic名を決める
-//   message = new Paho.Message(text);  // messageを作る
-//   message.destinationName = topic;
-    // 送信する
-   client.publish(topic, text);    
+  function publish(subtitle, text){     // 投稿する
+   var topic = buildTopic(subtitle);    // topic名を決める
+   client.publish(topic, text);         // Publish 送信する
    console.log('MQTT: Publish topic = ' + topic);
   }
-/*
-  function sendSdp(sessionDescription) {  // wsでSDPを送信する
-    console.log('sending sdp ...');
-    textForSendSdp.value = sessionDescription.sdp;  // テキストエリアに表示
 
-    var topic = sessionDescription.type;
-    message = new Paho.MQTT.Message(sessionDescription.sdp);
-    message.destinationName = topic;
-    client.send(message);
-  }
-
-  function sendIceCandidate(candidate) {
-    console.log('---sending ICE candidate ---');
-    let obj = { type: 'candidate', ice: candidate };
-    let message = JSON.stringify(obj);
-    console.log('sending candidate=' + message);
-    client.send(message);
-  }
-*/
   function setOfferText(text) {
     peerConnection = prepareNewConnection();  // offerが送られた相手と新たにpeer接続を作る
     var offer = new RTCSessionDescription({
@@ -260,18 +241,6 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
       console.log("Peer: Create Answer failed");
     }, mediaConstraints);
   }
-/*
-  function onSDPText() {
-   var text = textToReceiveSDP.value;
-   if (peerConnection) {
-    onAnswerText(text);
-   }
-   else {
-    onOfferText(text);
-   }
-   textToReceiveSDP.value ="";
-  }
-*/ 
 
   function onOfferText(text) {
     setOfferText(text); // 新たなpeer接続を作り
@@ -282,70 +251,6 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     console.log("Peer: Received answer text...")
     setAnswerText(text);
   }
-
-  
-/*
-  // Receive messages
-  client.on('message', function (topic, message) {
-    console.log(message.toString());
-    if(message.type === 'offer'){
-      console.log('Received offer ...');
-      textToReceiveSdp.value = message.sdp;
-      let offer = new RTCSessionDescription(message);
-      setOffer(offer);      
-    }
-    else if (message.type === 'answer') { // answerメッセージなら
-      // --- got answer ---
-      console.log('Received answer ...');
-      textToReceiveSdp.value = message.sdp;
-      let answer = new RTCSessionDescription(message);
-      setAnswer(answer);
-    }
-    else if (message.type === 'candidate') {  // 相手からICE candidateを受け取ったら
-      // --- got ICE candidate ---
-      console.log('Received ICE candidate ...');
-      let candidate = new RTCIceCandidate(message.ice);
-      console.log(candidate);
-      addIceCandidate(candidate);   // 覚えさせる
-    }   
-//    client.end()
-  })
-*/
- /*
-  let ws = new WebSocket(wsUrl);
-  ws.onopen = function(evt) {
-    console.log('ws open()');
-  };
-  ws.onerror = function(err) {
-    console.error('ws onerror() ERR:', err);
-  };
-  ws.onmessage = function(evt) {  // MQTTからメッセージが来たら
-    console.log('ws onmessage() data:', evt.data);
-    let message = JSON.parse(evt.data);
-    if (message.type === 'offer') {     // offerメッセージなら
-      // -- got offer ---
-      console.log('Received offer ...');
-      textToReceiveSdp.value = message.sdp;
-      let offer = new RTCSessionDescription(message);
-      setOffer(offer);  
-    }
-    else if (message.type === 'answer') { // answerメッセージなら
-      // --- got answer ---
-      console.log('Received answer ...');
-      textToReceiveSdp.value = message.sdp;
-      let answer = new RTCSessionDescription(message);
-      setAnswer(answer);
-    }
-    else if (message.type === 'candidate') {  // 相手からICE candidateを受け取ったら
-      // --- got ICE candidate ---
-      console.log('Received ICE candidate ...');
-      let candidate = new RTCIceCandidate(message.ice);
-      console.log(candidate);
-      addIceCandidate(candidate);   // 覚えさせる
-    }
-  };
-*/
-
 
   // ---------------------- media handling ----------------------- 
   // start local video
@@ -504,7 +409,9 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
         textForSendSdp.value = sdp;              // テキストエリア(送信用)に表示 
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
-        sendSDPTextMQTT(type, sdp);             // シグナリング(MQTT)に送信
+        iceCompleat = true;
+        makeAnswer();               // 自分のSDPをanswerにセットする
+        publish(type, sdp);         // シグナリング(MQTT)にSDPを投稿
       }
     };
 
