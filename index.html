@@ -18,6 +18,9 @@
     <video id="local_video" autoplay style="width: 240px; height: 180px; border: 1px solid black;"></video>
     <video id="remote_video" autoplay style="width: 240px; height: 180px; border: 1px solid black;"></video>
   </div>
+  <p id="status">
+    状態
+  </p>
   <p>SDP to send:<br />
     <textarea id="text_for_send_sdp" rows="5" cols="60" readonly="readonly" required></textarea>
   </p>
@@ -30,6 +33,7 @@
   
   let localVideo = document.getElementById('local_video');
   let remoteVideo = document.getElementById('remote_video');
+  var status = document.getElementById('status').textContent;
   let localStream = null;
   let peerConnection = null;
   let peerStarted = false;
@@ -98,6 +102,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   }
   console.log('clientId= ' + clientId);
   console.log('Connecting mqtt client ...');
+  status = 'Connecting mqtt client ...';
   const client  = mqtt.connect(host, options); // MQTT（シグナリングサーバー）に接続する
 //  const client = new Paho.MQTT.Client(host, Number(8084), clientId);
   
@@ -108,6 +113,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 
   client.on('connect', function () {  // MQTTに接続出来たら
     console.log('MQTT Connected');
+    status = 'MQTT Connected';
     subscribe('offer');               // offerを待ち受ける。(subscribe=購読する)
   })
 
