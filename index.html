@@ -477,7 +477,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     peer.onicecandidate = function (evt) { // local ICE candidateが収集される度に呼び出される。
       if (evt.candidate) {                // ICE candidate が収集された場合
         console.log('Peer: ');
-        console.log(evt.candidate.toJSON);
+        console.log(evt.candidate);
         // Vanilla ICE の場合には、何もしない
         // Tricle ICE の場合は、ここでICE candidateを相手に送る
         // sendIceCandidate(evt.candidate);  // ICE candidateを相手に送る (Trickle ICE の場合)
