@@ -340,30 +340,6 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     }
   }
 
-  /*
-  // ----- hand signaling ----
-  function onSdpText() {  // [Receive remote SDP]ボタンがクリックされた時の処理（ハンドシェイク用）
-    let text = textToReceiveSdp.value;
-    if (peerConnection) {
-      console.log('Received answer text...');
-      let answer = new RTCSessionDescription({
-        type : 'answer',
-        sdp : text,
-      });
-      setAnswer(answer);
-    }
-    else {
-      console.log('Received offer text...');
-      let offer = new RTCSessionDescription({
-        type : 'offer',
-        sdp : text,
-      });
-      setOffer(offer);
-    }
-    textToReceiveSdp.value ='';
-  }
- */
-
   // ---------------------- connection handling -----------------------
   function prepareNewConnection() {     // 通信相手ごとに作る
      var peer = new RTCPeerConnection({                // RTCPeerConnectionを初期化 
@@ -410,7 +386,6 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
         textForSendSdp.value = sdp;              // テキストエリア(送信用)に表示 
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
-        iceCompleat = true;
 //        makeAnswer();               // 自分のSDPをanswerにセットする
         publish(type, sdp);         // シグナリング(MQTT)にSDPを投稿
       }
@@ -423,16 +398,17 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
 
     // --- other events ----
     peer.onicecandidateerror = function (evt) {
-      console.error('Peer: ICE candidate ERROR:', evt);
+      console.error('Peer: ICE candidate ERROR: ', evt);
     };
 
     peer.onsignalingstatechange = function() {
-      console.log('Peer: == signaling status=' + peer.signalingState);
+      console.log('Peer: == signaling status= ' + peer.signalingState);
     };
 
     peer.oniceconnectionstatechange = function() {
-      console.log('Peer: == ice connection status=' + peer.iceConnectionState);
-      if (peer.iceConnectionState == 'completed') {
+      console.log('Peer: == ice connection status= ' + peer.iceConnectionState);
+      if (peer.iceConnectionState === 'connected') {
+        iceCompleat = true;
         console.log("Peer: candidate complete");
       }
       if (peer.iceConnectionState === 'disconnected') {
@@ -442,11 +418,14 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
     };
 
     peer.onicegatheringstatechange = function() {
-      console.log('Peer: ==***== ice gathering state=' + peer.iceGatheringState);
+      console.log('Peer: ==***== ice gathering state= ' + peer.iceGatheringState);
     };
     
     peer.onconnectionstatechange = function() {
-      console.log('Peer: ==***== connection state=' + peer.connectionState);
+      console.log('Peer: ==***== connection state= ' + peer.connectionState);
+      if(peer.connectionState === 'connected'){
+
+      }
     };
 
     peer.onremovestream = function(event) {
