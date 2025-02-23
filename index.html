@@ -402,8 +402,8 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
       element.src = window.URL.createObjectURL(stream);
     }
     element.volume = 1; // 0 or 1
-//    element.play(); // エラーになる
-    fetchVideoAndPlay(element, stream);
+    element.play(); // エラーになる
+//    fetchVideoAndPlay(element, stream);
   }
   
   function fetchVideoAndPlay(element, stream) {
