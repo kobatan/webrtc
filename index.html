@@ -486,7 +486,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
         console.log('Peer: ICE candidate compleat.');
         let type = peer.localDescription.type;
         let sdp  = peer.localDescription.sdp;
-        console.log('Peer: local SDP type: ' + type);
+        console.log('Peer: local SDP Get. type: ' + type);
         textForSendSdp.value = sdp;              // テキストエリア(送信用)に表示 
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
