@@ -131,14 +131,17 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
       textToReceiveSdp.value = message.sdp;
 //      let offer = new RTCSessionDescription(message);
 //      setOffer(offer);  
-      onOfferText(message.sdp); // offer SDP を
+//      onOfferText(message.sdp); // offer SDP を
+      setOfferText(message.sdp);  // 新たなpeer接続を作り。 相手のSDPをセットする
+      makeAnswer();               // 自分のSDPをanswerにセットする
     }
     else if (topic === buildTopic('answer')) {  // "anser"トピックが来たら
       console.log('Received answer SDP ...');
       textToReceiveSdp.value = message.sdp;
 //    let answer = new RTCSessionDescription(message);
 //    setAnswer(answer);
-      onAnswerText(message.sdp)
+//      onAnswerText(message.sdp)
+      setAnswerText(message.sdp); // 相手SDPをpeerにセットする
     }
     else if (topic === buildTopic('candidate')) {
       // --- got ICE candidate ---
@@ -229,12 +232,12 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
   }
 */
   function setOfferText(text) {
-    peerConnection = prepareNewConnection();
+    peerConnection = prepareNewConnection();  // offerが送られた相手と新たにpeer接続を作る
     var offer = new RTCSessionDescription({
       type : 'offer',
       sdp : text,
     });
-    peerConnection.setRemoteDescription(offer);
+    peerConnection.setRemoteDescription(offer); // 相手のSDPをセットする
   }
   
   function setAnswerText(text) {
@@ -246,7 +249,7 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
       type : 'answer',
       sdp : text,
     });
-    peerConnection.setRemoteDescription(answer);
+    peerConnection.setRemoteDescription(answer);  // 相手SDPをセット
   }
 
   function makeAnswer(evt) {
@@ -256,12 +259,12 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
       return;
     }
     peerConnection.createAnswer(function (sessionDescription) { // in case of success
-      peerConnection.setLocalDescription(sessionDescription);
+      peerConnection.setLocalDescription(sessionDescription);   // 自分のSDPをセットする
     }, function () { // in case of error
       console.log("Create Answer failed");
     }, mediaConstraints);
   }
-
+/*
   function onSDPText() {
    var text = textToReceiveSDP.value;
    if (peerConnection) {
@@ -272,10 +275,11 @@ const TRUSTED_CA_LIST = './emqxsl-ca.crt';
    }
    textToReceiveSDP.value ="";
   }
-  
+*/ 
+
   function onOfferText(text) {
-    setOfferText(text);
-    makeAnswer();
+    setOfferText(text); // 新たなpeer接続を作り
+    makeAnswer();       // answerを送る
   }
 
   function onAnswerText(text) {
