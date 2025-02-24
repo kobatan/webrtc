@@ -325,7 +325,7 @@
     function playVideo(element, stream) {
     if(element === remoteVideo) console.log('Peer: playVideo() for remote');
     else console.log('Peer: playVideo() for local');
-    if(!iceCompleat && element === remoteVideo) return;
+   // if(!iceCompleat && element === remoteVideo) return;
     if ('srcObject' in element) {
       console.log('Peer: elemet.srcObject = stream;');
       element.srcObject = stream;
