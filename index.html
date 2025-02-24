@@ -322,16 +322,18 @@
     }
   }
 
-    function playVideo(element, stream) {
-    if(element === remoteVideo) console.log('Peer: playVideo() for remote');
-    else console.log('Peer: playVideo() for local');
-   // if(!iceCompleat && element === remoteVideo) return;
+  function playVideo(element, stream) {
+    if(element === remoteVideo) console.log('Peer: playVideo() for Remote');
+    else console.log('HTML: playVideo() for Local');
+//    if(!iceCompleat && element === remoteVideo) return;
     if ('srcObject' in element) {
       console.log('Peer: elemet.srcObject = stream;');
-      element.srcObject = stream;
+//      element.srcObject = stream;
+      element.src = window.URL.createObjectURL(stream);     
     }else{
       console.log('Peer: element.src = window.URL.createObjectURL(stream);');
       element.src = window.URL.createObjectURL(stream);
+  //    element.src = URL.createObjectURL(stream);
     }
     element.volume = 1; // 0 or 1
     element.play(); // エラーになる
