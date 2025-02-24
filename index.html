@@ -16,8 +16,8 @@
 </head>
 <body>
   <div>WebRTC</div>
-  <button onclick="startVideo();">Start Video</button>
-  <button onclick="stopVideo();">Stop Video</button>
+  <button onclick="startLocalVideo();">Start Video</button>
+  <button onclick="stopLocalVideo();">Stop Video</button>
   <button onclick="connect();" >Peer Connect</button>
   <button onclick="hangUp();">Peer Hang Up</button> 
   <div>
@@ -244,8 +244,8 @@
     }
   }
   
-  function startVideo() {  // start local video
-    getDeviceStream({video: true, audio: false})  // ローカルビデオを取得する
+  function startLocalVideo() {  // start local video
+    getDeviceStream({video: true, audio: true})  // ローカルビデオを取得する（video:ON audio:ON）
     .then(function (stream) {                     // 成功したら
       localStream = stream;                       // ストリーム変数に代入（P2Pでの送信用）
       playVideo(localVideo, stream);              // HTMLのvideoに再生      
@@ -257,7 +257,7 @@
   }
 
   // stop local video
-  function stopVideo() {
+  function stopLocalVideo() {
     pauseVideo(localVideo);           // HTMLのvideoを停止
     stopLocalStream(localStream);     // ストーリームを停止
   }
@@ -301,7 +301,7 @@
     }
   }
 
-  // ---------------------- connection handling -----------------------
+// ---------------------- connection handling -----------------------
   function prepareNewConnection() {     // 通信相手ごとに作る
      var peer = new RTCPeerConnection({                // RTCPeerConnectionを初期化 
 //      offerToReceiveAudio: 0,
