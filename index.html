@@ -286,7 +286,24 @@
       element.src = window.URL.createObjectURL(stream);
     }
     element.volume = 1; // 0 or 1
-    element.play();
+//    element.play();
+    element.load();
+    fetchVideoAndPlay(element, stream);
+  }
+  
+  function fetchVideoAndPlay(element, stream) {
+    fetch(stream)
+    .then(response => response.blob())
+    .then(blob => {
+      element.srcObject = blob;
+      return element.play();
+    })
+    .then(_ => {
+      // Video playback started ;)
+    })
+    .catch(e => {
+      // Video playback failed ;(
+    })
   }
 
   function pauseVideo(element) {
