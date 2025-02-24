@@ -24,9 +24,6 @@
     <video id="local_video" autoplay style="width: 240px; height: 180px; border: 1px solid black;"></video>
     <video id="remote_video" autoplay style="width: 240px; height: 180px; border: 1px solid black;"></video>
   </div>
-  <p id="status">
-    状態
-  </p>
   <p>SDP to send:<br />
     <textarea id="text_for_send_sdp" rows="5" cols="60" readonly="readonly" required></textarea>
   </p>
@@ -39,21 +36,11 @@
   
   let localVideo = document.getElementById('local_video');
   let remoteVideo = document.getElementById('remote_video');
-  let status = document.getElementById('status');
-  let localStream = null;
-  let peerConnection = null;
-  let peerStarted = false;
-  let iceCompleat = false;
-
   let textForSendSdp = document.getElementById('text_for_send_sdp');
   let textToReceiveSdp = document.getElementById('text_for_receive_sdp');
-/*
- // --- prefix -----
-  navigator.getUserMedia  = navigator.getUserMedia    || navigator.webkitGetUserMedia ||
-                            navigator.mozGetUserMedia || navigator.msGetUserMedia;
-  RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
-  RTCSessionDescription = window.RTCSessionDescription || window.webkitRTCSessionDescription || window.mozRTCSessionDescription;
-*/
+
+  let localStream = null;     // P2P通信で使用する
+  let peerConnection = null;  // peer接続済みフラグ
 
 // =============== EMQX MQTTブローカー に接続 =============================
 // MQTT 接続情報
@@ -92,7 +79,6 @@
     ca: TRUSTED_CA_LIST,    // CA証明書
   }
   console.log('MQTT: Connecting MQTT Client ...');
-  status.textContent = 'Connecting MQTT Client ...';
 
   const client  = mqtt.connect(Host, options); // MQTT（シグナリングサーバー）に接続する
 
@@ -103,7 +89,6 @@
 
   client.on('connect', function () {  // MQTTに接続出来たら
     console.log('MQTT: Connected');
-    status.textContent = 'MQTT Connected';
     subscribe('offer');               // offerを待ち受ける。(subscribe=購読する)
   })
 
@@ -385,7 +370,6 @@
     peer.oniceconnectionstatechange = function() {
       console.log('Peer: ICE connection status: ' + peer.iceConnectionState);
       if (peer.iceConnectionState === 'connected') {
-        iceCompleat = true;
         console.log("Peer: ICE candidate complete");
       }
       if (peer.iceConnectionState === 'disconnected') {
