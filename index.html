@@ -390,11 +390,13 @@
     peer.addEventListener("addstream", onRemoteStreamAdded, false);
     peer.addEventListener("removestream", onRemoteStreamRemoved, false);
 
-    function onRemoteStreamAdded(event) {
+    function onRemoteStreamAdded(event) {   // 
+      console.log('Peer: onRemodeStreamAdded');
       playVideo(remoteVideo, event.stream); // 映像を再生する
     }
 
     function onRemoteStreamRemoved(event) {
+      console.log('Peer: onRemodeStreamRemoved');
       remoteVideo.src = "";
     }
 
