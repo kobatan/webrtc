@@ -173,8 +173,7 @@
     if (! peerConnection) { // まだコネクションが確立してなかったら
       console.log('Peer: make Offer');
       makeOffer();          //  Offer SDPを作成し送信する。（非同期処理）
-    }
-    else {
+    }else{
       console.warn('Peer: already exist.');
     }
   }
@@ -186,8 +185,7 @@
       peerConnection.close();
       peerConnection = null;
       pauseVideo(remoteVideo);
-    }
-    else {
+    }else{
       console.warn('peer NOT exist.');
     }
   }
@@ -259,8 +257,7 @@
     if ('getUserMedia' in navigator.mediaDevices) {
       console.log('navigator.mediaDevices.getUserMadia');
       return navigator.mediaDevices.getUserMedia(option);
-    }
-    else {
+    }else{
       console.log('wrap navigator.getUserMadia with Promise');
       return new Promise(function(resolve, reject){    
         navigator.getUserMedia(option, resolve, reject);
@@ -315,8 +312,7 @@
     element.pause();
     if ('srcObject' in element) {
       element.srcObject = null;
-    }
-    else {
+    }else{
       if (element.src && (element.src !== '') ) {
         window.URL.revokeObjectURL(element.src);
       }
@@ -345,14 +341,13 @@
     };
 
     peer.addEventListener("addstream", onRemoteStreamAdded, false);
-    peer.addEventListener("removestream", onRemoteStreamRemoved, false);
-    
     function onRemoteStreamAdded(event) {   // 
       console.log('Peer: onRemodeStreamAdded');
       playVideo(remoteVideo, event.stream); // 映像を再生する
       console.log('Peer: playVideo() for Remote');
     }
 
+    peer.addEventListener("removestream", onRemoteStreamRemoved, false);
     function onRemoteStreamRemoved(event) {
       console.log('Peer: onRemodeStreamRemoved');
       remoteVideo.src = "";
@@ -430,8 +425,7 @@
     if (localStream) {
       console.log('Peer: adding local stream...');
       peer.addStream(localStream);        // ローカルの映像/音声ストリームを追加する
-    }
-    else {
+    }else{
       console.warn('Peer: no local stream, but continue.');
     }
 
