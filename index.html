@@ -271,6 +271,279 @@
         track.stop();
       }
     }
+<!doctype html>
+<html lang="ja">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>WebRTC</title>
+ <script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.js"></script>
+<style>
+  button {
+    width: 10em;
+    height:3em;
+    font-size: 1.5em;
+  }
+</style>
+</head>
+<body>
+  <div>WebRTC</div>
+  <button onclick="startLocalVideo();">Start Video</button>
+  <button onclick="stopLocalVideo();">Stop Video</button>
+  <button onclick="connect();" >Peer Connect</button>
+  <button onclick="hangUp();">Peer Hang Up</button> 
+  <div>
+    <video id="local_video" autoplay style="width: 240px; height: 180px; border: 1px solid black;"></video>
+    <video id="remote_video" autoplay style="width: 240px; height: 180px; border: 1px solid black;"></video>
+  </div>
+  <p>SDP to send:<br />
+    <textarea id="text_for_send_sdp" rows="5" cols="60" readonly="readonly" required></textarea>
+  </p>
+  <p>SDP received:&nbsp;
+    <br />
+    <textarea id="text_for_receive_sdp" rows="5" cols="60"></textarea>
+  </p>
+</body>
+<script type="text/javascript">
+  
+  let localVideo = document.getElementById('local_video');
+  let remoteVideo = document.getElementById('remote_video');
+  let textForSendSdp = document.getElementById('text_for_send_sdp');
+  let textToReceiveSdp = document.getElementById('text_for_receive_sdp');
+
+  let localStream = null;     // P2P通信で使用する
+  let peerConnection = null;  // peer接続済みフラグ
+
+// =============== EMQX MQTTブローカー に接続 =============================
+// MQTT 接続情報
+  const TCP_port = 1883;
+  const WS_port =  8083;
+  const SSL_port = 8883;
+  const WSS_port = 8084;
+// const API_KEY = 'https://ebb8eeee.ala.asia-southeast1.emqxsl.com:8443/api/v5';
+// const KEY = fs.readFileSync(path.join(__dirname, '/tls-key.pem'));
+// const CERT = fs.readFileSync(path.join(__dirname, '/tls-cert.pem'));
+  const TRUSTED_CA_LIST = './emqxsl-ca.crt';
+//  const border = 'broker.emqx.io';
+  const Broker = 'ebb8eeee.ala.asia-southeast1.emqxsl.com';
+  const User_name = "user"; 
+  const Password = "password";  
+  const Host = 'wss://' + Broker + ':' + WSS_port +'/mqtt'; // MQTTブローカー
+  const topic_offer = User_name + '/signaling/offer';       // MQTT用のトピック名を決めて置く
+  const topic_answer = User_name + '/signaling/answer';
+  const topic_candidate = User_name + '/signaling/candidate';
+  
+  var clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8); // 他の人と被らないクライアントIDを作成。
+
+  const options = {  // Create an MQTT client instance
+    keepalive:60,
+    clientId: clientId,
+    protocolId:'MQTT',
+    protocolVersion: 4,
+    username: User_name,
+    password: Password,
+    clean: true,
+    reconnectPeriod: 1000,
+    connectTimeout: 30*1000,
+//    key: KEY,
+//    cert: CERT,
+//    rejectUnauthorized: true,
+    ca: TRUSTED_CA_LIST,    // CA証明書
+  }
+  console.log('MQTT: Connecting MQTT Client ...');
+
+  const client  = mqtt.connect(Host, options); // MQTT（シグナリングサーバー）に接続する
+
+  function buildTopic(type) {   // topic名をその都度作成
+    var topic = User_name + '/signaling/' + type;
+    return topic;
+  }
+
+  client.on('connect', function () {  // MQTTに接続出来たら
+    console.log('MQTT: Connected');
+    subscribe('offer');               // offerを待ち受ける。(subscribe=購読する)
+  })
+
+  client.on('message', function(topic, message, packet){  // MQTT にメッセージが来たら呼ばれる
+    status.textContent = 'MQTT message recived';
+    console.log(`MQTT: onmessage ==> Topic: ${topic}, QoS: ${packet.qos}`);
+    switch(topic){
+      case topic_offer:   // "offer"トピックが来たら
+        console.log('MQTT: Received offer SDP ...');
+        textToReceiveSdp.value = message;
+        setOfferText(message);      // 新たなpeer接続を作り。 相手のSDPをセットする
+        makeAnswer();               // 自分のSDPをanswerにセットする
+        break;
+      case topic_answer:  // "anser"トピックが来たら
+        console.log('MQTT: Received answer SDP ...');
+        textToReceiveSdp.value = message;
+        setAnswerText(message); // 相手SDPをpeerにセットする
+        break;
+      case topic_candidate:         // ICE candidateが来たら
+        console.log('MQTT: Received ICE candidate ...');
+        let candidate = new RTCIceCandidate(message);
+        console.log(candidate);
+        addIceCandidate(candidate);   // 覚えさせる
+        break;
+      default:
+        console.warn('MQTT: Bad SDP topic');
+    }
+  })
+  
+  client.on('reconnect', function () {  // 切断後に再接続でトリガ
+    status.textContent = 'MQTT Reconnect';   
+    console.log('MQTT: Reconnecting...');
+  })
+
+  client.on('close', function () {      // 切断後にトリガ
+    status.textContent = 'MQTT close';
+    console.log('MQTT: Disconnected')
+  })
+
+  function subscribe(type) {      // 購読予約する
+    var topic = buildTopic(type); // topic名を生成
+    client.subscribe(topic);      // topic名で購読予約する
+    console.log('MQTT: Subscribe topic = ' + topic);
+  }
+
+  function unsubscribe(type) {    // 購読予約を解除する
+    var topic = buildTopic(type); // topic名を生成
+    client.unsubscribe(topic);    // topic名の予約を解除する
+    console.log('MQTT: unSubscribe topic = ' + topic);    
+  }
+
+  function publish(type, text){   // 投稿する
+   var topic = buildTopic(type);  // topic名を決める
+   client.publish(topic, text);   // topic名で投稿する
+   console.log('MQTT: Publish topic = ' + topic);
+  }
+//=========================================================
+
+  // start PeerConnection
+  function connect() {
+    if (! peerConnection) { // まだコネクションが確立してなかったら
+      console.log('Peer: make Offer');
+      makeOffer();          //  Offer SDPを作成し送信する。（非同期処理）
+    }else{
+      console.warn('Peer: already exist.');
+    }
+  }
+
+  // close PeerConnection
+  function hangUp() {
+    if (peerConnection) {
+      console.log('Peer: Hang up.');
+      peerConnection.close();
+      peerConnection = null;
+      pauseVideo(remoteVideo);
+    }else{
+      console.warn('peer NOT exist.');
+    }
+  }
+
+  function setOfferText(text) {
+    peerConnection = prepareNewConnection();  // offerが送られた相手と新たにpeer接続を作る
+    var offer = new RTCSessionDescription({
+      type : 'offer',
+      sdp : text,
+    });
+    peerConnection.setRemoteDescription(offer); // 相手のSDPをセットする
+  }
+  
+  function setAnswerText(text) {
+    if (! peerConnection) {
+      console.error('Peer: peerConnection NOT exist!');
+      return;
+    }
+    var answer = new RTCSessionDescription({
+      type : 'answer',
+      sdp : text,
+    });
+    peerConnection.setRemoteDescription(answer);  // 相手SDPをセット
+  }
+
+  function makeOffer() {    // SDPを作成し送信する
+    unsubscribe("offer");   // offerの待ち受けを解除
+    subscribe("answer");    // answerを待ち受ける
+    peerConnection = prepareNewConnection();  // RTCPeerConnectionを生成し、必要なメッセージハンドラを設定
+
+    peerConnection.createOffer()              // OfferSDPを生成 （非同期で処理が行われるので、.then()で受け止める。Promise）
+      .then(function (offerSDP) {
+        console.log('Peer: createOffer() succsess in promise. type = ' + offerSDP.type);
+        return peerConnection.setLocalDescription(offerSDP);  // 生成したOffer SDPを、ローカルSDPに登録。（非同期で処理が行われるので、.then()で受け止める。Promise）
+      }).then(function() {                                    // 裏でICE Candidatesが作成される。このタイミングで自身のonicecandidateが発火される。
+        console.log('Peer: setLocalDescription() succsess in promise');
+        // Vanilla ICE の場合には、まだSDPは送らない 
+        // Trickle Ice の場合ここで置くる
+        // sendSdp(peerConnection.localDescription);   // ローカルSDPを相手に送る。(Trickle ICE 処理)
+      }).catch(function(err) {  // エラー
+        console.error(err);
+      });
+
+  }
+
+  function makeAnswer() { // Anser SDP を作成し送信する
+    console.log('Peer: sending Answer. Creating remote session description...' );
+    if (! peerConnection) {
+      console.error('Peer: peerConnection NOT exist!');
+      return;
+    }
+    
+    peerConnection.createAnswer() //  Answer SDPを生成(非同期処理)
+      .then(function (sessionDescription) {
+        console.log('Peer: createAnswer() succsess in promise');
+        return peerConnection.setLocalDescription(sessionDescription);  // 生成したAnswer SDPをローカルSDPにする。(Promiseを使った非同期処理で行われる。)
+      }).then(function() {
+        console.log('Peer: setLocalDescription() succsess in promise'); 
+        // Vanilla ICE の場合には、まだSDPは送らない
+        // Tricle ICE の場合は送る
+        //sendSdp(peerConnection.localDescription); // ローカルSDPを相手に送る(Trickle ICE の場合)
+      }).catch(function(err) {
+        console.error(err);
+      });
+  }
+
+  // ---------------------- media handling ----------------------- 
+  function getDeviceStream(option) {
+    if ('getUserMedia' in navigator.mediaDevices) {
+      console.log('navigator.mediaDevices.getUserMadia');
+      return navigator.mediaDevices.getUserMedia(option);
+    }else{
+      console.log('wrap navigator.getUserMadia with Promise');
+      return new Promise(function(resolve, reject){    
+        navigator.getUserMedia(option, resolve, reject);
+      });      
+    }
+  }
+  
+  function startLocalVideo() {  // start local video
+    getDeviceStream({video: true, audio: true})  // ローカルビデオを取得する（video:ON audio:ON）
+    .then(function (stream) {                     // 成功したら
+      localStream = stream;                       // ストリーム変数に代入（P2Pでの送信用）
+      playVideo(localVideo, stream);              // HTMLのvideoに再生      
+      console.log('HTML: playVideo() for Local');     
+    }).catch(function (error) { // error
+      console.error('getUserMedia error:', error);
+      return;
+    });
+  }
+
+  // stop local video
+  function stopLocalVideo() {
+    pauseVideo(localVideo);           // HTMLのvideoを停止
+    stopLocalStream(localStream);     // ストーリームを停止
+  }
+
+  function stopLocalStream(stream) {  // ローカルストリームを停止
+    let tracks = stream.getTracks();
+    if (! tracks) {
+      console.warn('NO tracks');
+    }else{
+      for (let track of tracks) {
+        track.stop();
+      }
+    }
     if(peerConnection){
       peerConnection.stopLocalStream(localStream);
     }
@@ -286,26 +559,9 @@
       element.src = window.URL.createObjectURL(stream);
     }
     element.volume = 1; // 0 or 1
-//    element.play();
-    element.load();
-    fetchVideoAndPlay(element, stream);
+    element.play();
   }
   
-  function fetchVideoAndPlay(element, stream) {
-    fetch(stream)
-    .then(response => response.blob())
-    .then(blob => {
-      element.srcObject = blob;
-      return element.play();
-    })
-    .then(_ => {
-      // Video playback started ;)
-    })
-    .catch(e => {
-      // Video playback failed ;(
-    })
-  }
-
   function pauseVideo(element) {
     element.pause();
     if ('srcObject' in element) {
