@@ -324,8 +324,7 @@
 
   function playVideo(element, stream) {
     if(!iceCompleat && element === remoteVideo) return;
-//    if ('srcObject' in element) {
-    if(element === localVideo){
+    if ('srcObject' in element) {
       element.srcObject = stream;
     }
     else {
