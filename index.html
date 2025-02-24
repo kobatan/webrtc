@@ -74,13 +74,13 @@
 //  const border = 'broker.emqx.io';
   const Broker = 'ebb8eeee.ala.asia-southeast1.emqxsl.com';
   const User_name = "user"; 
-  const Pass = "password";  
-  const Host = 'wss://' + Broker + ':' + WSS_port +'/mqtt';            // MQTTブローカー
+  const Password = "password";  
+  const Host = 'wss://' + Broker + ':' + WSS_port +'/mqtt'; // MQTTブローカー
   const topic_offer = User_name + '/signaling/offer';       // MQTT用のトピック名を決めて置く
   const topic_answer = User_name + '/signaling/answer';
   const topic_candidate = User_name + '/signaling/candidate';
   
-  var clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8); // 適当なクライアントID。今回は一意にしません
+  var clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8); // 他の人と被らないクライアントIDを作成。
 
   const options = {  // Create an MQTT client instance
     keepalive:60,
@@ -88,7 +88,7 @@
     protocolId:'MQTT',
     protocolVersion: 4,
     username: User_name,
-    password: Pass,
+    password: Password,
     clean: true,
     reconnectPeriod: 1000,
     connectTimeout: 30*1000,
@@ -351,8 +351,8 @@
   // ---------------------- connection handling -----------------------
   function prepareNewConnection() {     // 通信相手ごとに作る
      var peer = new RTCPeerConnection({                // RTCPeerConnectionを初期化 
-//      offerToReceiveAudio: 1,
-//      offerToReceiveVideo: 0,
+      offerToReceiveAudio: 0,
+      offerToReceiveVideo: 0,
       iceServers: [
         {"urls": "stun:stun.l.google.com:19302"},     // グローバルアドレスを得る
         {"urls": "stun:stun1.l.google.com:19302"},
@@ -382,15 +382,15 @@
       remoteVideo.src = "";
     }
 
-    peer.onicecandidate = function (evt) { // local ICE candidateが収集される度に呼び出される。
-      if (evt.candidate) {                // ICE candidate が収集された場合
+    peer.onicecandidate = function (evt) { // ICE候補が収集される度に呼び出される。
+      if (evt.candidate) {                 // ICE候補が収集された場合
         console.log('Peer: ');
         console.log(evt.candidate);
         // Vanilla ICE の場合には、何もしない
         // Tricle ICE の場合は、ここでICE candidateを相手に送る
-        // sendIceCandidate(evt.candidate);  // ICE candidateを相手に送る (Trickle ICE の場合)
+        // sendIceCandidate(evt.candidate);  // ICE候補を相手に送る (Trickle ICE の場合)
 
-      } else {                              // ICE candidateの収集が完了した時
+      } else {                              // ICE候補の収集が完了した時
         console.log('Peer: ICE candidate compleat.');
         let type = peer.localDescription.type;
         let sdp  = peer.localDescription.sdp;
