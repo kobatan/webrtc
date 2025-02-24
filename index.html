@@ -287,11 +287,13 @@
     let tracks = stream.getTracks();
     if (! tracks) {
       console.warn('NO tracks');
-      localStream = null;
-      return;
+    }else{
+      for (let track of tracks) {
+        track.stop();
+      }
     }
-    for (let track of tracks) {
-      track.stop();
+    if(peerConnection){
+      peerConnection.stopLocalStream(localStream);
     }
     localStream = null;    
   }
@@ -323,8 +325,8 @@
   // ---------------------- connection handling -----------------------
   function prepareNewConnection() {     // 通信相手ごとに作る
      var peer = new RTCPeerConnection({                // RTCPeerConnectionを初期化 
-   //   offerToReceiveAudio: 0,
-   //   offerToReceiveVideo: 0,
+//      offerToReceiveAudio: 0,
+//      offerToReceiveVideo: 0,
       iceServers: [
         {"urls": "stun:stun.l.google.com:19302"},     // グローバルアドレスを得る
         {"urls": "stun:stun1.l.google.com:19302"},
@@ -333,24 +335,22 @@
     });
     
     // SDPの交換が終わると、P2P通信に相手の映像/音声が含まれていればイベントが発生します。
-    peer.ontrack = function(event) {        // .ontrackイベントが発生したら
+    peer.ontrack = function(event) {                                // ontrackイベントが発生した時
       console.log('Peer: peer.ontrack() 映像・音声が送られて来ました。');
       let stream = event.streams[0];
-      playVideo(remoteVideo, stream);       // 映像を再生する
+      playVideo(remoteVideo, stream);                               // 映像を再生する
       console.log('Peer: playVideo() for Remote');
     };
-/*
-    peer.addEventListener("addstream", onRemoteStreamAdded, false);
-    function onRemoteStreamAdded(event) {   // 
+
+    peer.addEventListener("addstream", onRemoteStreamAdded, false); // ストリームがpeerに追加された時
+    function onRemoteStreamAdded(event) {  
       console.log('Peer: onRemodeStreamAdded');
-      playVideo(remoteVideo, event.stream); // 映像を再生する
-      console.log('Peer: playVideo() for Remote');
     }
-*/
-    peer.addEventListener("removestream", onRemoteStreamRemoved, false);
+
+    peer.addEventListener("removestream", onRemoteStreamRemoved, false);  // ストリームがpeerから離れたとき
     function onRemoteStreamRemoved(event) {
       console.log('Peer: onRemodeStreamRemoved');
-      remoteVideo.src = "";
+      remoteVideo.src = "";                                         // リモートのHTML表示を消す
     }
 
     peer.onicecandidate = function (evt) { // ICE候補が収集される度に呼び出される。
@@ -376,7 +376,7 @@
 
     // --- when need to exchange SDP ---
     peer.onnegotiationneeded = function(evt) {
-      console.log('Peer: -- onnegotiationneeded() ---');
+      console.log('Peer: onnegotiationneeded');
     };
 
     // --- other events ----
@@ -385,11 +385,11 @@
     };
 
     peer.onsignalingstatechange = function() {
-      console.log('Peer: signaling status = ' + peer.signalingState);
+      console.log('Peer: signaling status: ' + peer.signalingState);
     };
 
     peer.oniceconnectionstatechange = function() {
-      console.log('Peer: ICE connection status = ' + peer.iceConnectionState);
+      console.log('Peer: ICE connection status: ' + peer.iceConnectionState);
       if (peer.iceConnectionState === 'connected') {
         iceCompleat = true;
         console.log("Peer: ICE candidate complete");
@@ -401,11 +401,11 @@
     };
 
     peer.onicegatheringstatechange = function() {
-      console.log('Peer: ICE gathering state = ' + peer.iceGatheringState);
+      console.log('Peer: ICE gathering state: ' + peer.iceGatheringState);
     };
     
     peer.onconnectionstatechange = function() {
-      console.log('Peer: onconnectionstatechange state = ' + peer.connectionState);
+      console.log('Peer: onconnectionstatechange state: ' + peer.connectionState);
       switch(peer.connectionState) {
         case "connected":
           console.log('Peer: 接続完了しました。');
@@ -428,7 +428,6 @@
     }else{
       console.warn('Peer: no local stream, but continue.');
     }
-
     return peer;
   }
   // --- tricke ICE ---
