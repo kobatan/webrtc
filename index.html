@@ -351,8 +351,8 @@
   // ---------------------- connection handling -----------------------
   function prepareNewConnection() {     // 通信相手ごとに作る
      var peer = new RTCPeerConnection({                // RTCPeerConnectionを初期化 
-      offerToReceiveAudio: 1,
-      offerToReceiveVideo: 0,
+//      offerToReceiveAudio: 1,
+//      offerToReceiveVideo: 0,
       iceServers: [
         {"urls": "stun:stun.l.google.com:19302"},     // グローバルアドレスを得る
         {"urls": "stun:stun1.l.google.com:19302"},
