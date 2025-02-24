@@ -226,7 +226,7 @@
         console.log('Peer: setLocalDescription() succsess in promise');
         // Vanilla ICE の場合には、まだSDPは送らない 
         // Trickle Ice の場合ここで置くる
-        // sendSdp(peerConnection.localDescription);   // ローカルSDPを相手に送る。(Trickle ICE 処理)
+        sendSdp(peerConnection.localDescription);   // ローカルSDPを相手に送る。(Trickle ICE 処理)
       }).catch(function(err) {  // エラー
         console.error(err);
       });
