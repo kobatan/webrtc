@@ -322,12 +322,17 @@
     }
   }
 
-  function playVideo(element, stream) {
+   function playVideo(element, stream) {
+    console.log('Peer: playVideo() for ');
+    if(element === remoteVideo) conslole.log('Peer: playVideo for remote');
+    else console.log('Peer: playVideo for local');
     if(!iceCompleat && element === remoteVideo) return;
     if ('srcObject' in element) {
+      console.log('Peer: elemet.srcObject = stream;');
       element.srcObject = stream;
     }
     else {
+      console.log('Peer: element.src = window.URL.createObjectURL(stream);');
       element.src = window.URL.createObjectURL(stream);
     }
     element.volume = 1; // 0 or 1
