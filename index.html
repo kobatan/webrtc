@@ -232,20 +232,7 @@
       });
 
   }
-/*
-  function makeAnswer(evt) {
-    console.log('Peer: sending Answer. Creating remote session description...' );
-    if (! peerConnection) {
-      console.error('Peer: peerConnection NOT exist!');
-      return;
-    }
-    peerConnection.createAnswer(function (sessionDescription) { // in case of success
-      peerConnection.setLocalDescription(sessionDescription);   // 自分のSDPをセットする
-    }, function () { // in case of error
-      console.log("Peer: Create Answer failed");
-    }, mediaConstraints);
-  }
-*/
+
   function makeAnswer() { // Anser SDP を作成し送信する
     console.log('Peer: sending Answer. Creating remote session description...' );
     if (! peerConnection) {
@@ -262,22 +249,11 @@
         // Vanilla ICE の場合には、まだSDPは送らない
         // Tricle ICE の場合は送る
         //sendSdp(peerConnection.localDescription); // ローカルSDPを相手に送る(Trickle ICE の場合)
-
       }).catch(function(err) {
         console.error(err);
       });
   }
-/*
-  function onOfferText(text) {
-    setOfferText(text); // 新たなpeer接続を作り
-    makeAnswer();       // answerを送る
-  }
 
-  function onAnswerText(text) {
-    console.log("Peer: Received answer text...")
-    setAnswerText(text);
-  }
-*/
   // ---------------------- media handling ----------------------- 
   function getDeviceStream(option) {
     if ('getUserMedia' in navigator.mediaDevices) {
@@ -414,39 +390,45 @@
     };
 
     peer.onsignalingstatechange = function() {
-      console.log('Peer: == signaling status= ' + peer.signalingState);
+      console.log('Peer: signaling status = ' + peer.signalingState);
     };
 
     peer.oniceconnectionstatechange = function() {
-      console.log('Peer: == ice connection status= ' + peer.iceConnectionState);
+      console.log('Peer: ICE connection status = ' + peer.iceConnectionState);
       if (peer.iceConnectionState === 'connected') {
         iceCompleat = true;
-        console.log("Peer: candidate complete");
+        console.log("Peer: ICE candidate complete");
       }
       if (peer.iceConnectionState === 'disconnected') {
-        console.log('Peer: -- disconnected --');
+        console.log('Peer: ICE disconnected');
         hangUp();
       }
     };
 
     peer.onicegatheringstatechange = function() {
-      console.log('Peer: ==***== ice gathering state= ' + peer.iceGatheringState);
+      console.log('Peer: ICE gathering state = ' + peer.iceGatheringState);
     };
     
     peer.onconnectionstatechange = function() {
-      console.log('Peer: ==***== connection state= ' + peer.connectionState);
-      if(peer.connectionState === 'connected'){
-
-      }
+      console.log('Peer: onconnectionstatechange state = ' + peer.connectionState);
+      switch(peer.connectionState) {
+        case "connected":
+          console.log('Peer: 接続完了しました。');
+          break;
+        case "disconnected":
+        case "failed":
+        case "closed":
+          break;
+        }
     };
 
     peer.onremovestream = function(event) {
-      console.log('Peer: -- peer.onremovestream()');
+      console.log('Peer: onremovestream()');
       pauseVideo(remoteVideo);
     };
     
     if (localStream) {
-      console.log('Peer: Adding local stream...');
+      console.log('Peer: adding local stream...');
       peer.addStream(localStream);        // ローカルの映像/音声ストリームを追加する
     }
     else {
@@ -455,37 +437,6 @@
 
     return peer;
   }
-
-
-/*
-  function setOffer(sessionDescription) { // offerメーッセージをリモートSDPにセット
-    if (peerConnection) {
-      console.error('Peer: peerConnection alreay exist!');
-    }
-    peerConnection = prepareNewConnection();
-    peerConnection.setRemoteDescription(sessionDescription)
-    .then(function() {
-      console.log('Peer: setRemoteDescription(offer) succsess in promise');
-      makeAnswer();
-    }).catch(function(err) {
-      console.error('Peer: setRemoteDescription(offer) ERROR: ', err);
-    });
-  }
-
-  function setAnswer(sessionDescription) {
-    if (! peerConnection) {
-      console.error('Peer: peerConnection NOT exist!');
-      return;
-    }
-
-    peerConnection.setRemoteDescription(sessionDescription)
-    .then(function() {  //裏でICE Candidatesが作成されるので、自身のonicecandidateが発火される。
-      console.log('Peer: setRemoteDescription(answer) succsess in promise');
-    }).catch(function(err) {
-      console.error('Peer: setRemoteDescription(answer) ERROR: ', err);
-    });
-  }
-*/
   // --- tricke ICE ---
   function addIceCandidate(candidate) {
     if (peerConnection) {
