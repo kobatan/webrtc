@@ -279,36 +279,6 @@
   }
 */
   // ---------------------- media handling ----------------------- 
-  // start local video
-  function startVideo() {
-    getDeviceStream({video: true, audio: false})
-    .then(function (stream) { // success
-      localStream = stream;
-      playVideo(localVideo, stream);
-    }).catch(function (error) { // error
-      console.error('getUserMedia error:', error);
-      return;
-    });
-  }
-
-  // stop local video
-  function stopVideo() {
-    pauseVideo(localVideo);
-    stopLocalStream(localStream);
-  }
-
-  function stopLocalStream(stream) {
-    let tracks = stream.getTracks();
-    if (! tracks) {
-      console.warn('NO tracks');
-      return;
-    }
-    
-    for (let track of tracks) {
-      track.stop();
-    }
-  }
-  
   function getDeviceStream(option) {
     if ('getUserMedia' in navigator.mediaDevices) {
       console.log('navigator.mediaDevices.getUserMadia');
@@ -321,11 +291,39 @@
       });      
     }
   }
+  
+  function startVideo() {  // start local video
+    getDeviceStream({video: true, audio: false})  // ローカルビデオを取得する
+    .then(function (stream) {                     // 成功したら
+      localStream = stream;                       // ストリーム変数に代入（P2Pでの送信用）
+      playVideo(localVideo, stream);              // HTMLのvideoに再生      
+      console.log('HTML: playVideo() for Local');     
+    }).catch(function (error) { // error
+      console.error('getUserMedia error:', error);
+      return;
+    });
+  }
 
-   function playVideo(element, stream) {
-    if(element === remoteVideo) console.log('Peer: playVideo() for Remote');
-    else console.log('HTML: playVideo() for Local');
-//    if(!iceCompleat && element === remoteVideo) return;
+  // stop local video
+  function stopVideo() {
+    pauseVideo(localVideo);           // HTMLのvideoを停止
+    stopLocalStream(localStream);     // ストーリームを停止
+  }
+
+  function stopLocalStream(stream) {  // ローカルストリームを停止
+    let tracks = stream.getTracks();
+    if (! tracks) {
+      console.warn('NO tracks');
+      localStream = null;
+      return;
+    }
+    for (let track of tracks) {
+      track.stop();
+    }
+    localStream = null;    
+  }
+ 
+  function playVideo(element, stream) { // HTMLのvideoに再生
     if ('srcObject' in element) {
       console.log('Peer: elemet.srcObject = stream;');
       element.srcObject = stream;
@@ -335,21 +333,6 @@
     }
     element.volume = 1; // 0 or 1
     element.play();
-  }
-  
-  function fetchVideoAndPlay(element, stream) {
-    fetch(stream)
-    .then(response => response.blob())
-    .then(blob => {
-      element.srcObject = blob;
-      return element.play();
-    })
-    .then(_ => {
-      // Video playback started ;)
-    })
-    .catch(e => {
-      // Video playback failed ;(
-    })
   }
 
   function pauseVideo(element) {
@@ -382,14 +365,16 @@
       console.log('Peer: peer.ontrack() 映像・音声が送られて来ました。');
       let stream = event.streams[0];
       playVideo(remoteVideo, stream);       // 映像を再生する
+      console.log('Peer: playVideo() for Remote');
     };
 
     peer.addEventListener("addstream", onRemoteStreamAdded, false);
     peer.addEventListener("removestream", onRemoteStreamRemoved, false);
-
+    
     function onRemoteStreamAdded(event) {   // 
       console.log('Peer: onRemodeStreamAdded');
       playVideo(remoteVideo, event.stream); // 映像を再生する
+      console.log('Peer: playVideo() for Remote');
     }
 
     function onRemoteStreamRemoved(event) {
@@ -460,14 +445,14 @@
       pauseVideo(remoteVideo);
     };
     
-    // 通信対象の映像/音声ストリームを追加する
     if (localStream) {
       console.log('Peer: Adding local stream...');
-      peer.addStream(localStream);
+      peer.addStream(localStream);        // ローカルの映像/音声ストリームを追加する
     }
     else {
       console.warn('Peer: no local stream, but continue.');
     }
+
     return peer;
   }
 
