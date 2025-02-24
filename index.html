@@ -349,20 +349,20 @@
 
     // --- when need to exchange SDP ---
     peer.onnegotiationneeded = function(evt) {
-      console.log('Peer: onnegotiationneeded');
+      console.log('Peer: onnegotiationneeded() ', evt);
     };
 
     // --- other events ----
     peer.onicecandidateerror = function (evt) {
-      console.error('Peer: ICE candidate ERROR: ', evt);
+      console.error('Peer: onicecandidateerror() ICE candidate ERROR: ', evt);
     };
 
     peer.onsignalingstatechange = function() {
-      console.log('Peer: signaling status: ' + peer.signalingState);
+      console.log('Peer: onsignalingstatechange() signaling status: ' + peer.signalingState);
     };
 
     peer.oniceconnectionstatechange = function() {
-      console.log('Peer: ICE connection status: ' + peer.iceConnectionState);
+      console.log('Peer: oniceconnectionstatechange()');
       if (peer.iceConnectionState === 'connected') {
         console.log("Peer: ICE candidate complete");
       }
@@ -373,11 +373,11 @@
     };
 
     peer.onicegatheringstatechange = function() {
-      console.log('Peer: ICE gathering state: ' + peer.iceGatheringState);
+      console.log('Peer: onicegatheringstatechange() state: ' + peer.iceGatheringState);
     };
     
     peer.onconnectionstatechange = function() {
-      console.log('Peer: onconnectionstatechange state: ' + peer.connectionState);
+      console.log('Peer: onconnectionstatechange() state: ' + peer.connectionState);
       switch(peer.connectionState) {
         case "connected":
           console.log('Peer: 接続完了しました。');
