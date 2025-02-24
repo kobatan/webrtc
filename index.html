@@ -45,21 +45,15 @@
   let peerStarted = false;
   let iceCompleat = false;
 
-  var mediaConstraints = {
-    'mandatory': {
-      'OfferToReceiveAudio':true,
-      'OfferToReceiveVideo':false,
-    }
-  };
-
   let textForSendSdp = document.getElementById('text_for_send_sdp');
   let textToReceiveSdp = document.getElementById('text_for_receive_sdp');
-  // --- prefix -----
+/*
+ // --- prefix -----
   navigator.getUserMedia  = navigator.getUserMedia    || navigator.webkitGetUserMedia ||
                             navigator.mozGetUserMedia || navigator.msGetUserMedia;
   RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
   RTCSessionDescription = window.RTCSessionDescription || window.webkitRTCSessionDescription || window.mozRTCSessionDescription;
-
+*/
 
 // =============== EMQX MQTTブローカー に接続 =============================
 // MQTT 接続情報
