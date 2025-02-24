@@ -339,14 +339,14 @@
       playVideo(remoteVideo, stream);       // 映像を再生する
       console.log('Peer: playVideo() for Remote');
     };
-
+/*
     peer.addEventListener("addstream", onRemoteStreamAdded, false);
     function onRemoteStreamAdded(event) {   // 
       console.log('Peer: onRemodeStreamAdded');
       playVideo(remoteVideo, event.stream); // 映像を再生する
       console.log('Peer: playVideo() for Remote');
     }
-
+*/
     peer.addEventListener("removestream", onRemoteStreamRemoved, false);
     function onRemoteStreamRemoved(event) {
       console.log('Peer: onRemodeStreamRemoved');
