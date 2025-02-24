@@ -442,8 +442,7 @@
     if (peerConnection) {
       console.lpg('Peer: addIceCandidate');
       peerConnection.addIceCandidate(candidate);
-    }
-    else {
+    }else{
       console.error('Peer: PeerConnection not exist!');
       return;
     }
