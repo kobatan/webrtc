@@ -7,8 +7,6 @@
  <title>WebRTC</title>
  <script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.js"></script>
  <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.js"></script>
- <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>-->
- <script src="https://sdk.twilio.com/js/video/releases/2.22.1/twilio-video.min.js"></script>
 <style>
   button {
     width: 10em;
@@ -322,8 +320,8 @@
       peer.addStream(localStream);                  // ローカルの映像/音声ストリームを追加する
       console.log('Peer: ローカル映像を追加しました。');
     }else{
-      const transceiver = peer.addTransceiver('video');
-      transceiver.setDirection('sendrecv');//('recvonly');         //videoをrecvonlyにする
+  //    const transceiver = peer.addTransceiver('video');
+  //    transceiver.setDirection('sendrecv');//('recvonly');         //videoをrecvonlyにする
       console.warn('Peer: ローカル映像が無いけど進めます。');
     }
 
