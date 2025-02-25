@@ -310,22 +310,22 @@
 
     if (localStream) {                              // P2P用ローカルストリームがあるなら
       peer.addStream(localStream);                  // ローカルの映像/音声ストリームを追加する
-      console.log('Peer: addStream(localStream);');
+      console.log('Peer: ローカル映像を追加しました。');
     }else{
-      console.warn('Peer: no localStream, but continue.');
+      console.warn('Peer: ローカル映像が無いけど進めます。');
     }
 
     peer.onnegotiationneeded = function(evt) {      // [1]　SDPの交換が必要です
-      console.log('Peer: onnegotiationneeded() ');
+      console.log('Peer: onnegotiationneeded() SDPの交換が必要です。');
     };
     
     peer.onsignalingstatechange = function() {      // シグナライジング状態変化
       switch(peer.signalingState){
         case 'have-local-offer':
-          console.log('Peer: onsignalingstatechange() Have a Local SDP');  // [3]
+          console.log('Peer: onsignalingstatechange() ローカルSDPを受け取りました。');  // [3]
           break;
         case 'stable':
-          console.log('Peer: onsignalingstatechange() Have a Remode SDP'); // [10]
+          console.log('Peer: onsignalingstatechange() リモートSDPを受け取りました。'); // [10]
           break;
       }
     };
@@ -341,7 +341,7 @@
       } else {                              // ICE候補の収集が完了した時 [6]
         let type = peer.localDescription.type;
         let sdp  = peer.localDescription.sdp;
-        console.log('Peer: ICE candidate compleat & Publish local SDP. type: ' + type);
+        console.log('Peer: ICE候補収集完了 & localSDP を相手に送ります. type: ' + type);
         textForSendSdp.value = sdp;              // テキストエリア(送信用)に表示 
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
@@ -393,19 +393,19 @@
     
     peer.addEventListener("addstream", onRemoteStreamAdded, false); // ストリームがpeerに追加された時
     function onRemoteStreamAdded(event) {  // [12]
-      console.log('Peer: onRemodeStreamAdded');
+      console.log('Peer: リモート映像が追加されました。');
     }
 
     // SDPの交換が終わると、P2P通信に相手の映像/音声が含まれていればイベントが発生します。
     peer.ontrack = function(event) {      // [13]                           // ontrackイベントが発生した時
-      console.log('Peer: peer.ontrack() 映像・音声が送られて来たので再生します。');
+      console.log('Peer: peer.ontrack() 映像・音声データが送られて来たので再生します。');
       let stream = event.streams[0];
       playVideo(remoteVideo, stream);                               // 映像を再生する
     };
 
     peer.addEventListener("removestream", onRemoteStreamRemoved, false);  // ストリームがpeerから離れたとき
     function onRemoteStreamRemoved(event) {
-      console.log('Peer: onRemodeStreamRemoved');
+      console.log('Peer: リモート映像が無くなりました。');
       remoteVideo.src = "";                                         // リモートのHTML表示を消す
     }
 
