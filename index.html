@@ -55,7 +55,7 @@
     }
   }
   
-  function startLocalVideo() {  // start local video
+  function startLocalVideo(){  // start local video
     getDeviceStream({video: true, audio: true})  // ローカルビデオを取得する（video:ON audio:ON）
     .then(function (stream) {                     // 成功したら
       localStream = stream;                       // ストリーム変数に代入（P2Pでの送信用）
