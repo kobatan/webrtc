@@ -230,10 +230,10 @@
 
     peerConnection.createOffer()              // OfferSDPを生成 （非同期で処理が行われるので、.then()で受け止める。Promise）
       .then(function (offerSDP) {
-        console.log('Peer: createOffer() succsess & setLocalDescription() type : ' + offerSDP.type);  // [2]
+        console.log('Peer: ローカルSDP作成成功。PeerにローカルSDPに追加します。 type : ' + offerSDP.type);  // [2]
         return peerConnection.setLocalDescription(offerSDP);  // 生成したOffer SDPを、ローカルSDPに登録。（非同期で処理が行われるので、.then()で受け止める。Promise）
       }).then(function() {                                    // 裏でICE Candidatesが作成される。このタイミングで自身のonicecandidateが発火される。
-        console.log('Peer: setLocalDescription() succsess in promise');
+        console.log('Peer: PeerにローカルSDP追加成功');
         // Vanilla ICE の場合には、まだSDPは送らない 
         // Trickle Ice の場合ここで置くる
         // sendSdp(peerConnection.localDescription);   // ローカルSDPを相手に送る。(Trickle ICE 処理)
@@ -353,10 +353,10 @@
     peer.onicegatheringstatechange = function() {
       switch(peer.iceGatheringState){
         case 'gathering':
-          console.log('Peer: onicegatheringstatechange() ICE収集中');  // [5]
+          console.log('Peer: onicegatheringstatechange() ICE候補収集中');  // [5]
           break;
         case 'complete':
-          console.log('Peer: onicegatheringstatechange() ICE収集完了'); // [7]
+          console.log('Peer: onicegatheringstatechange() ICE候補収集完了'); // [7]
           break;  
       }
     };
