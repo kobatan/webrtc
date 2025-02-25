@@ -320,8 +320,16 @@
       console.log('Peer: onnegotiationneeded() ');
     };
     
-    peer.onsignalingstatechange = function() {  // [3],[10]
-      console.log('Peer: onsignalingstatechange() signaling status: ' + peer.signalingState);
+    peer.onsignalingstatechange = function() { 
+      var status = peer.signalingState;
+      switch(status){
+        case have-local-offer:
+          console.log('Peer: onsignalingstatechange() Local SDP Get');    // [3]
+          break;
+        case stable:
+          console.log('Peer: onsignalingstatechange() status: Stable(安定した)'); // [10]
+          break;
+      }
     };
     
     peer.onicecandidate = function (evt) { // [4] ICE候補が収集される度に呼び出される。
