@@ -44,19 +44,18 @@
   let peerConnection = null;  // peer接続済みフラグ
  
   //===================== media handling ======================= 
-  function getDeviceStream(option) {
+ function getDeviceStream(option) {
     if ('getUserMedia' in navigator.mediaDevices) {
-      console.log('HTML: navigator.mediaDevices.getUserMadia');
       return navigator.mediaDevices.getUserMedia(option);
     }else{
-      console.log('HTML: wrap navigator.getUserMadia with Promise');
       return new Promise(function(resolve, reject){    
         navigator.getUserMedia(option, resolve, reject);
       });      
     }
   }
-  
+
   function startLocalVideo(){  // start local video
+    console.log('HTML: カメラデバイスを探しています。');   
     getDeviceStream({
       video: {
         width:{min:640, max: 1920},
@@ -69,9 +68,9 @@
     .then(function (stream) {                     // 成功したら
       localStream = stream;                       // ストリーム変数に代入（P2Pでの送信用）
       playVideo(localVideo, stream);              // HTMLのvideoに再生      
-      console.log('HTML: playVideo() for Local');     
+      console.log('HTML: カメラを再生しました。');     
     }).catch(function (error) { // error
-      console.error('HTML: getUserMedia error:', error);
+      console.error('HTML: カメラが見つかりませんでした。', error);
       return;
     });
   }
@@ -153,10 +152,10 @@
   }
 
   const client  = mqtt.connect(Host, options); // MQTT（シグナリングサーバー）に接続する
-  console.log('MQTT: MQTTブローカーに接続中 ...');
+  console.log('MQTT: ブローカーに接続中 ...');
 
   client.on('connect', function () {  // MQTTに接続出来たら
-    console.log('MQTT: MQTTブローカーに接続完了');
+    console.log('MQTT: ブローカーに接続完了');
     subscribe('offer');               // offerを待ち受ける。(subscribe=購読する)
   })
 
@@ -198,19 +197,19 @@
   function subscribe(type) {      // 購読予約する
     var topic = buildTopic(type); // topic名を生成
     client.subscribe(topic);      // topic名で購読予約する
-    console.log('MQTT: 購読予約 topic : ' + topic);
+    console.log('MQTT: 購読予約しました。 トピック名: ' + topic);
   }
 
   function unsubscribe(type) {    // 購読予約を解除する
     var topic = buildTopic(type); // topic名を生成
     client.unsubscribe(topic);    // topic名の予約を解除する
-    console.log('MQTT: 購読予約解除 topic : ' + topic);    
+    console.log('MQTT: 購読予約解除 トピック名: ' + topic);    
   }
 
   function publish(type, text){   // 投稿する
    var topic = buildTopic(type);  // topic名を決める
    client.publish(topic, text);   // topic名で投稿する
-   console.log('MQTT: 投稿した。 topic : ' + topic);
+   console.log('MQTT: 投稿した。 トピック名: ' + topic);
   }
 
 //======= PeerConnection ================================================
