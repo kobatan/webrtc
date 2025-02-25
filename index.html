@@ -71,7 +71,8 @@
   function playVideo(element, stream) { // HTMLのvideoに再生
     if ('srcObject' in element) {
       console.log('HTML: elemet.srcObject = stream;');
-      element.srcObject = stream;
+      if(element.srcObject === null)
+        element.srcObject = stream;
     }else{
       console.log('HTML: element.src = window.URL.createObjectURL(stream);');
       element.src = window.URL.createObjectURL(stream);
