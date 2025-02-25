@@ -230,7 +230,7 @@
 
     peerConnection.createOffer()              // OfferSDPを生成 （非同期で処理が行われるので、.then()で受け止める。Promise）
       .then(function (offerSDP) {
-        console.log('Peer: createOffer() succsess in promise. type = ' + offerSDP.type);  // [2]
+        console.log('Peer: createOffer() succsess & setLocalDescription() type : ' + offerSDP.type);  // [2]
         return peerConnection.setLocalDescription(offerSDP);  // 生成したOffer SDPを、ローカルSDPに登録。（非同期で処理が行われるので、.then()で受け止める。Promise）
       }).then(function() {                                    // 裏でICE Candidatesが作成される。このタイミングで自身のonicecandidateが発火される。
         console.log('Peer: setLocalDescription() succsess in promise');
@@ -315,19 +315,17 @@
       console.warn('Peer: no localStream, but continue.');
     }
 
-    // --- when need to exchange SDP ---
-    peer.onnegotiationneeded = function(evt) {      // [1]　交渉(SDPの交換)が必要です
+    peer.onnegotiationneeded = function(evt) {      // [1]　SDPの交換が必要です
       console.log('Peer: onnegotiationneeded() ');
     };
     
-    peer.onsignalingstatechange = function() { 
-      var status = peer.signalingState;
-      switch(status){
+    peer.onsignalingstatechange = function() {      // シグナライジング状態変化
+      switch(peer.signalingState){
         case 'have-local-offer':
-          console.log('Peer: onsignalingstatechange() Local SDP Get');    // [3]
+          console.log('Peer: onsignalingstatechange() Have a Local SDP');  // [3]
           break;
         case 'stable':
-          console.log('Peer: onsignalingstatechange() status: Stable(安定した)'); // [10]
+          console.log('Peer: onsignalingstatechange() Have a Remode SDP'); // [10]
           break;
       }
     };
@@ -343,7 +341,7 @@
       } else {                              // ICE候補の収集が完了した時 [6]
         let type = peer.localDescription.type;
         let sdp  = peer.localDescription.sdp;
-        console.log('Peer: ICE candidate compleat. local SDP get. type: ' + type);
+        console.log('Peer: ICE candidate compleat & Publish local SDP. type: ' + type);
         textForSendSdp.value = sdp;              // テキストエリア(送信用)に表示 
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
@@ -352,24 +350,39 @@
       }
     };
     
-    peer.onicegatheringstatechange = function() { //[5],[7]=complete
-      console.log('Peer: onicegatheringstatechange() state: ' + peer.iceGatheringState);
+    peer.onicegatheringstatechange = function() {
+      switch(peer.iceGatheringState){
+        case 'gathering':
+          console.log('Peer: onicegatheringstatechange() ICE収集中');  // [5]
+          break;
+        case 'complete':
+          console.log('Peer: onicegatheringstatechange() ICE収集完了'); // [7]
+          break;  
+      }
     };
 
-    peer.oniceconnectionstatechange = function() {  //[8],[14]
-      console.log("Peer: oniceconnectionstatechange() state: " + peer.iceConnectionState);
-      if (peer.iceConnectionState === 'disconnected') {
-        hangUp();
+    peer.oniceconnectionstatechange = function() {
+      switch(peer.iceConnectionState){
+        case 'checking':
+          console.log('Peer: oniceconnectionstatechange() ICE調査中');  // [8]
+          break;
+        case 'connected':
+          console.log('Peer: oniceconnectionstatechange() ICE接続');    // [14]
+          break;
+        case 'disconnected':
+          console.log('Peer: oniceconnectionstatechange() ICE切断');  
+          hangUp();
+          break;
       }
     };
     
-    peer.onconnectionstatechange = function() { // [9],[15]
-      console.log('Peer: onconnectionstatechange() state: ' + peer.connectionState);
+    peer.onconnectionstatechange = function() {
       switch(peer.connectionState) {
-        case "connecting":    // [9]
+        case "connecting":
+          console.log('Peer: onconnectionstatechange() 接続中');  // [9]
           break;
-        case "connected":     // [15]
-          console.log('Peer: 接続完了しました。');
+        case "connected": 
+          console.log('Peer: onconnectionstatechange() 接続完了'); // [15]
           break;
         case "disconnected":
         case "failed":
@@ -418,5 +431,6 @@
       return;
     }
   }
+  
 </script>
 </html>
