@@ -324,10 +324,10 @@
       var status = peer.signalingState;
       console.log(status);
       switch(status){
-        case have-local-offer:
+        case 'have-local-offer':
           console.log('Peer: onsignalingstatechange() Local SDP Get');    // [3]
           break;
-        case stable:
+        case 'stable':
           console.log('Peer: onsignalingstatechange() status: Stable(安定した)'); // [10]
           break;
       }
