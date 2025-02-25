@@ -322,7 +322,6 @@
     
     peer.onsignalingstatechange = function() { 
       var status = peer.signalingState;
-      console.log(status);
       switch(status){
         case 'have-local-offer':
           console.log('Peer: onsignalingstatechange() Local SDP Get');    // [3]
