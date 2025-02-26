@@ -34,7 +34,7 @@
   </p>
 </body>
 <script>
-    let localVideo = document.getElementById('local_video');
+  let localVideo = document.getElementById('local_video');
   let remoteVideo = document.getElementById('remote_video');
   let textForSendSdp = document.getElementById('text_for_send_sdp');
   let textToReceiveSdp = document.getElementById('text_for_receive_sdp');
@@ -58,21 +58,21 @@
       },
       audio: true
 		};
-   navigator.mediaDevices.getUserMedia(constraints)   // ローカルビデオを取得する（video:ON audio:ON）
-    .then((stream) => {                               // 成功したら
-      localStream = stream;                           // ストリーム変数に代入（P2Pでの送信用）
-      playVideo(localVideo, stream);                  // HTMLのvideoに再生      
-      console.log('HTML: ローカルカメラを再生しました。');     
-    }).catch((error) => {
-      console.error('HTML: カメラが見つかりませんでした。', error);
-      return;
-    });
+    navigator.mediaDevices.getUserMedia(constraints)    // ローカルビデオを取得する（video:ON audio:ON）
+      .then((stream) => {                               // 成功したら
+        localStream = stream;                           // ストリーム変数に代入（P2Pでの送信用）
+        playVideo(localVideo, stream);                  // HTMLのvideoに再生      
+        console.log('HTML: ローカルカメラを再生しました。');     
+      }).catch((error) => {
+        console.error('HTML: カメラが見つかりませんでした。', error);
+        return;
+      });
   }
 
   function playVideo(element, stream) { // HTMLのvideoに再生
-    console.log('HTML: elemet.srcObject = stream;');      //[17]
-    if(element.srcObject) pauseVideo(element);
-    element.srcObject = stream;
+    if(element.srcObject === null){
+      element.srcObject = stream;
+    }
     element.volume = 1; // 0 or 1
     element.play();
   }
