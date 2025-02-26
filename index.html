@@ -50,15 +50,13 @@
   function startLocalVideo(){  // start local video
     console.log('HTML: カメラデバイスを探しています。');   
     getDeviceStream({
-   /*     video: {
+      video: {
         width:{min:640, max: 1920},
         height:{min:480, max: 1080},
         frameRate:{min:5, max:60, ideal:30},
         facingMode:  'environment',   // 'user'
       },
       audio: true
-*/  video:false,
-    audio:false,
     })  // ローカルビデオを取得する（video:ON audio:ON）
     .then(function (stream) {                     // 成功したら
       localStream = stream;                       // ストリーム変数に代入（P2Pでの送信用）
