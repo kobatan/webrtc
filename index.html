@@ -163,13 +163,13 @@
     status.textContent = 'MQTT message recived';
     switch(topic){
       case buildTopic('offer'):             // "offer"トピックが来たら
-        console.log(`MQTT: OfferSDPを受信しました。QoS${packet.qos}`);
+        console.log(`MQTT: Offerトピックを受信したので、Peer接続を開始します。QoS${packet.qos}`);
         textToReceiveSdp.value = message;   // 受信テキストBOXに表示
         setOfferText(message);              // 新たなpeer接続を作り。 相手のSDPをセットする
         makeAnswer();                       // 自分のSDPをanswerにセットする
         break;
-      case buildTopic('answer'):  // "anser"トピックが来たら
-        console.log(`MQTT: AnswerSDPを受信しました。QoS${packet.qos}`);     // [12]
+      case buildTopic('answer'):            // "anser"トピックが来たら
+        console.log(`MQTT: answerトピックを受信したので, Peer接続にリモートSDPをセットします。QoS${packet.qos}`);     // [12]
         textToReceiveSdp.value = message;   // 受信テキストBOXに表示
         setAnswerText(message);             // 相手SDPをpeerにセットする
         break;
@@ -298,7 +298,7 @@
 
 // ---------------------- connection handling -----------------------
   function prepareNewConnection() {                 // 通信相手ごとに作る
-    console.log(' Peer: 新たなPeer接続を作ります。');
+    console.log('Peer: 新たなPeer接続を作ります。');
      var peer = new RTCPeerConnection({             // RTCPeerConnectionを作成 
 //      offerToReceiveAudio: 0,
 //      offerToReceiveVideo: 0,
@@ -327,25 +327,25 @@
     peer.onicegatheringstatechange = function() {
       switch(peer.iceGatheringState){
         case 'gathering':
-          console.log('Peer: onicegatheringstatechange() ICE候補収集開始');         // [5]
+          console.log('Peer: onicegatheringstatechange() ICE候補収集開始');            // [5]
           break;
         case 'complete':
-          console.log('Peer: onicegatheringstatechange() ICE候補収集完了');         // [7]
+          console.log('Peer: onicegatheringstatechange() ICE候補収集完了');            // [7]
           break;  
       }
     };
 
     peer.onicecandidate = function (evt) { // ICE候補が収集される度に呼び出される。
       if (evt.candidate) {                 // ICE候補が収集された場合
-        console.log('Peer: ICE候補受信', evt.candidate);                                       //[6]
+        console.log('Peer: ICE候補受信', evt.candidate);                               // [6]
         // Vanilla ICE の場合には、何もしない
         // Tricle ICE の場合は、ここでICE candidateを相手に送る
         // sendIceCandidate(evt.candidate);  // ICE候補を相手に送る (Trickle ICE の場合)
 
-      } else {                              // ICE候補の収集が完了した時
+      } else {                              // ICE候補の収集が完了した時                 // [8]
         let type = peer.localDescription.type;
         let sdp  = peer.localDescription.sdp;
-        console.log('Peer: ICE候補収集完了したので localSDP をシグナリングで相手に送ります. type: ', type);//[8]
+        console.log('Peer: ICE候補収集完了したので localSDP をシグナリングで相手に送ります. type: ', type);
         textForSendSdp.value = sdp;         // テキストエリア(送信用)に表示 
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
