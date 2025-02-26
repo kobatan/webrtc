@@ -298,6 +298,7 @@
 
 // ---------------------- connection handling -----------------------
   function prepareNewConnection() {                 // 通信相手ごとに作る
+    console.log(' Peer: 新たなPeer接続を作ります。');
      var peer = new RTCPeerConnection({             // RTCPeerConnectionを作成 
 //      offerToReceiveAudio: 0,
 //      offerToReceiveVideo: 0,
