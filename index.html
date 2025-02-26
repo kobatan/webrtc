@@ -357,8 +357,8 @@
       peer.addStream(localStream);                  // ローカルの映像/音声ストリームを追加する  [1]
       console.log('Peer: Peerにローカル映像を追加しました。');
     }else{
-      const transceiver = peer.addTransceiver('video');
-      transceiver.setDirection('recvonly');         //videoをrecvonlyにする
+//      const transceiver = peer.addTransceiver('video');
+//      transceiver.setDirection('recvonly');         //videoをrecvonlyにする
       console.warn('Peer: ローカル映像が無いけど進めます。');
     }
 
