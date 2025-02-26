@@ -282,9 +282,15 @@
     };
    
     peer.oniceconnectionstatechange = function() {
-      if(peer.iceConnectionState === 'disconnected'){
-        console.log('Peer: oniceconnectionstatechange() ICE切断');  
-        hangUp();
+      switch(peer.iceConnectionState){
+        case 'connected':
+          console.log('Peer: oniceconnectionstatechange() ICE接続完了');
+          break;   
+        case 'disconnected':
+          console.log('Peer: oniceconnectionstatechange() ICE切断');  
+          hangUp();
+          break;
+
       }
     };
 
