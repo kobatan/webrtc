@@ -33,7 +33,7 @@
   </p>
   <p>SDP received:&nbsp;
     <br />
-    <textarea id="text_for_receive_sdp" rows="5" cols="60"></textarea>
+    <textarea id="text_for_receive_sdp" rows="5" cols="60" ></textarea>
   </p>
 </body>
 <script>
@@ -47,7 +47,7 @@
  
   //===================== media handling ======================= 
   function startLocalVideo(){  // start local video
-    const constraints = {
+/*    const constraints = {
       video: {
         width:{min:640, max: 1920},
         height:{min:480, max: 1080},
@@ -56,6 +56,11 @@
       },
       audio: true
 		};
+*/
+    const constraints = {
+      video: false,
+      audio: false,
+    };
     console.log('HTML: カメラデバイスを探しています。'); 
     navigator.mediaDevices.getUserMedia(constraints)    // ローカルビデオを取得する
       .then((stream) => {                               // 成功したら
@@ -131,8 +136,8 @@
 //    rejectUnauthorized: true,
     ca: TRUSTED_CA_LIST,    // CA証明書
   }
-
-  const client  = mqtt.connect(Host, options); // MQTT（シグナリングサーバー）に接続する
+  // MQTT（シグナリングサーバー）に接続する
+  const client  = mqtt.connect(Host, options);
   console.log('MQTT: シグナリング用ブローカーに接続中 ...');
 
   client.on('connect', function () {  // MQTTに接続出来たら
@@ -265,6 +270,15 @@
       ],
     });
 
+    if (localStream) {                              // P2P用ローカルストリームがあるなら
+      peer.addStream(localStream);                  // ローカルの映像/音声ストリームを追加する  [1]
+      console.log('Peer: Peerにローカル映像を追加しました。');
+    }else{
+//      const transceiver = peer.addTransceiver('video');
+//      transceiver.setDirection('recvonly');         //videoをrecvonlyにする
+      console.warn('Peer: ローカル映像がありません。');
+    }
+
     peer.onnegotiationneeded = function(evt) {                                      // [2]　SDPの交換が必要です
       console.log('Peer: onnegotiationneeded() SDPの交換が必要です。');              
     };
@@ -290,7 +304,6 @@
           console.log('Peer: oniceconnectionstatechange() ICE切断');  
           hangUp();
           break;
-
       }
     };
 
@@ -331,17 +344,9 @@
       console.log('Peer: onremovestream()');
       pauseVideo(remoteVideo);
     };
-    
-    if (localStream) {                              // P2P用ローカルストリームがあるなら
-      peer.addStream(localStream);                  // ローカルの映像/音声ストリームを追加する  [1]
-      console.log('Peer: Peerにローカル映像を追加しました。');
-    }else{
-//      const transceiver = peer.addTransceiver('video');
-//      transceiver.setDirection('recvonly');         //videoをrecvonlyにする
-      console.warn('Peer: ローカル映像が無いけど進めます。');
-    }
 
     return peer;
   }
+  
 </script>
 </html>
