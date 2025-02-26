@@ -115,6 +115,8 @@
         track.stop();
       }
     }
+    if(peerConnection)
+      peerConnection.removeStream(stream);
   }
 
 // =============== EMQX MQTTブローカー に接続 =============================
@@ -155,7 +157,7 @@
   console.log('MQTT: シグナリング用ブローカーに接続中 ...');
 
   client.on('connect', function () {  // MQTTに接続出来たら
-    console.log('MQTT: ブローカーに接続出来たので、offerトピックで購読予約します。');
+    console.log('MQTT: ブローカーに接続出来たので、offerトピックを購読予約します。');
     subscribe('offer');               // offerトピックを購読予約する。
   })
 
@@ -169,7 +171,7 @@
         makeAnswer();                       // 自分のSDPをanswerにセットする
         break;
       case buildTopic('answer'):            // "anser"トピックが来たら
-        console.log(`MQTT: answerトピックを受信したので, Peer接続にリモートSDPをセットします。QoS${packet.qos}`);     // [12]
+        console.log(`MQTT: answerトピックを受信したので, Peer接続にリモートSDPをセットします。QoS${packet.qos}`);     // [11]
         textToReceiveSdp.value = message;   // 受信テキストBOXに表示
         setAnswerText(message);             // 相手SDPをpeerにセットする
         break;
@@ -282,7 +284,7 @@
       sdp : text,
     });
     peerConnection.setRemoteDescription(answer);  // 相手SDPをセット
-    console.log('Peer: answerSDPをPeerのリモートSDPに設定しました。');    //[13]
+    console.log('Peer: answerSDPをPeerのリモートSDPに設定しました。');    //[12]
   }
 
   function hangUp() {       // close PeerConnection
@@ -319,7 +321,7 @@
           console.log('Peer: onsignalingstatechange() ローカルSDPを受け取りました。');  // [4]
           break;
         case 'stable':
-          console.log('Peer: onsignalingstatechange() リモートSDPを受け取りました。'); // [14]
+          console.log('Peer: onsignalingstatechange() リモートSDPを受け取りました。'); // [13]
           break;
       }
     };
@@ -360,7 +362,7 @@
           console.log('Peer: oniceconnectionstatechange() ICE接続先調査中');  // [10]
           break;
         case 'connected':
-          console.log('Peer: oniceconnectionstatechange() ICE接続中');        // [18]
+          console.log('Peer: oniceconnectionstatechange() ICE接続完了');        // [18]
           break;
         case 'disconnected':
           console.log('Peer: oniceconnectionstatechange() ICE切断');  
@@ -368,7 +370,7 @@
           break;
       }
     };
-
+/*
     peer.onconnectionstatechange = function() {
       switch(peer.connectionState) {
         case "connecting":
@@ -388,7 +390,7 @@
     function onRemoteStreamAdded(event) { 
       console.log('Peer: onRemoteStreamAdded() リモート映像がPeerに追加されました。');    // [15]
     }
-
+*/
     // SDPの交換が終わると、P2P通信に相手の映像/音声が含まれていればイベントが発生します。
     peer.ontrack = function(event) {                             // ontrackイベントが発生した時
       console.log('Peer: peer.ontrack() 映像・音声データが送られて来たので再生します。');   // [16]
