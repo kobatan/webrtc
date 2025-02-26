@@ -43,14 +43,8 @@
   let peerConnection = null;  // peer接続済みフラグ
  
   //===================== media handling ======================= 
- function getDeviceStream(option) {
-    if ('getUserMedia' in navigator.mediaDevices) {
-      return navigator.mediaDevices.getUserMedia(option);
-    }else{
-      return new Promise(function(resolve, reject){    
-        navigator.getUserMedia(option, resolve, reject);
-      });      
-    }
+  function getDeviceStream(option) {
+    return navigator.mediaDevices.getUserMedia(option);
   }
 
   function startLocalVideo(){  // start local video
@@ -75,38 +69,22 @@
   }
 
   function playVideo(element, stream) { // HTMLのvideoに再生
-    if ('srcObject' in element) {
-      console.log('HTML: elemet.srcObject = stream;');      //[17]
-      if(element.srcObject === null)
-        element.srcObject = stream;
-    }else{
-      console.log('HTML: element.src = window.URL.createObjectURL(stream);');
-      element.src = window.URL.createObjectURL(stream);
-    }
+    console.log('HTML: elemet.srcObject = stream;');      //[17]
+    if(element.srcObject === null)
+      element.srcObject = stream;
     element.volume = 1; // 0 or 1
     element.play();
   }
 
-  // stop local video
-  function stopLocalVideo() {
-    pauseVideo(localVideo);           // HTMLのvideoを停止
-    stopLocalStream(localStream);     // ストーリームを停止
-  }
-
   function pauseVideo(element) {
     element.pause();
-    if ('srcObject' in element) {
-      element.srcObject = null;
-    }else{
-      if (element.src && (element.src !== '') ) {
-        window.URL.revokeObjectURL(element.src);
-      }
-      element.src = '';
-    }
+    element.srcObject = null;
   }
 
-  function stopLocalStream(stream) {  // ローカルストリームを停止
-    let tracks = stream.getTracks();
+  function stopLocalVideo() {
+    pauseVideo(localVideo);           // HTMLのvideoを停止
+
+    let tracks = localStream.getTracks();
     if (! tracks) {
       console.warn('NO tracks');
     }else{
@@ -114,8 +92,9 @@
         track.stop();
       }
     }
-    if(peerConnection)
-      peerConnection.removeStream(stream);
+    if(peerConnection){
+      peerConnection.removeStream(localStream);
+    }
   }
 
 // =============== EMQX MQTTブローカー に接続 =============================
