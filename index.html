@@ -287,7 +287,7 @@
 
     // SDPの交換が終わると、P2P通信に相手の映像/音声が含まれていればイベントが発生します。
     peer.ontrack = function(event) {                             // ontrackイベントが発生した時
-      console.log('Peer: peer.ontrack() 映像・音声データが送られて来たので再生します。');   // [16]
+    　　console.log(`Peer: peer.ontrack() 映像・音声データが送られて来たので再生します。${event.track.kind}`);   // [16]
       let stream = event.streams[0];
       playVideo(remoteVideo, stream);  // 映像を再生する
     };
