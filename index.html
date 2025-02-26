@@ -43,12 +43,7 @@
   let peerConnection = null;  // peer接続済みフラグ
  
   //===================== media handling ======================= 
-  function getDeviceStream(option) {
-    return navigator.mediaDevices.getUserMedia(option);
-  }
-
   function startLocalVideo(){  // start local video
-    console.log('HTML: カメラデバイスを探しています。');
     const constraints = {
       video: {
         width:{min:640, max: 1920},
@@ -58,11 +53,12 @@
       },
       audio: true
 		};
-    navigator.mediaDevices.getUserMedia(constraints)    // ローカルビデオを取得する（video:ON audio:ON）
+    console.log('HTML: カメラデバイスを探しています。'); 
+    navigator.mediaDevices.getUserMedia(constraints)    // ローカルビデオを取得する
       .then((stream) => {                               // 成功したら
+        console.log('HTML: ローカルカメラが見つかりました。');         
         localStream = stream;                           // ストリーム変数に代入（P2Pでの送信用）
-        playVideo(localVideo, stream);                  // HTMLのvideoに再生      
-        console.log('HTML: ローカルカメラを再生しました。');     
+        playVideo(localVideo, stream);                  // HTMLのローカルvideoを再生      
       }).catch((error) => {
         console.error('HTML: カメラが見つかりませんでした。', error);
         return;
@@ -75,11 +71,13 @@
     }
     element.volume = 1; // 0 or 1
     element.play();
+    console.log('HTML: カメラを再生しました。');
   }
 
   function pauseVideo(element) {
     element.pause();
     element.srcObject = null;
+    console.log('HTML: カメラを停止しました。');
   }
 
   function stopLocalVideo() {
@@ -159,16 +157,6 @@
     }
   })
   
-  client.on('reconnect', function () {  // 切断後に再接続でトリガ
-    status.textContent = 'MQTT Reconnect';   
-    console.log('MQTT: 再接続中 ...');
-  })
-
-  client.on('close', function () {      // 切断後にトリガ
-    status.textContent = 'MQTT close';
-    console.log('MQTT: 切断しました。')
-  })
-
   function subscribe(type) {      // 購読予約する
     var topic = buildTopic(type); // topic名を生成
     client.subscribe(topic);      // topic名で購読予約する
@@ -265,7 +253,7 @@
   }
 
 // ---------------------- connection handling -----------------------
-  function prepareNewConnection() {                 // 通信相手ごとに作る
+  function prepareNewConnection() {                 // Peer接続を新たに開始する
     console.log('Peer: 新たなPeer接続を作ります。');
      var peer = new RTCPeerConnection({             // RTCPeerConnectionを作成 
       iceServers: [
@@ -279,29 +267,7 @@
     peer.onnegotiationneeded = function(evt) {                                      // [2]　SDPの交換が必要です
       console.log('Peer: onnegotiationneeded() SDPの交換が必要です。');              
     };
- /*   
-    peer.onsignalingstatechange = function() {      // シグナライジング状態変化
-      switch(peer.signalingState){
-        case 'have-local-offer':
-          console.log('Peer: onsignalingstatechange() ローカルSDPを受け取りました。');  // [4]
-          break;
-        case 'stable':
-          console.log('Peer: onsignalingstatechange() リモートSDPを受け取りました。'); // [13]
-          break;
-      }
-    };
 
-    peer.onicegatheringstatechange = function() {
-      switch(peer.iceGatheringState){
-        case 'gathering':
-          console.log('Peer: onicegatheringstatechange() ICE候補収集開始');            // [5]
-          break;
-        case 'complete':
-          console.log('Peer: onicegatheringstatechange() ICE候補収集完了');            // [7]
-          break;  
-      }
-    };
-*/
     peer.onicecandidate = function (evt) { // ICE候補が収集される度に呼び出される。
       if (evt.candidate) {                 // ICE候補が収集された場合
         console.log('Peer: ICE候補受信', evt.candidate);                               // [6]
@@ -315,17 +281,9 @@
     };
    
     peer.oniceconnectionstatechange = function() {
-      switch(peer.iceConnectionState){
-        case 'checking':
-          console.log('Peer: oniceconnectionstatechange() ICE接続先調査中');  // [10]
-          break;
-        case 'connected':
-          console.log('Peer: oniceconnectionstatechange() ICE接続完了');      // [18]
-          break;
-        case 'disconnected':
-          console.log('Peer: oniceconnectionstatechange() ICE切断');  
-          hangUp();
-          break;
+      if(peer.iceConnectionState === 'disconnected'){
+        console.log('Peer: oniceconnectionstatechange() ICE切断');  
+        hangUp();
       }
     };
 
