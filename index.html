@@ -48,8 +48,8 @@
   }
 
   function startLocalVideo(){  // start local video
-    console.log('HTML: カメラデバイスを探しています。');   
-    getDeviceStream({
+    console.log('HTML: カメラデバイスを探しています。');
+    const constraints = {
       video: {
         width:{min:640, max: 1920},
         height:{min:480, max: 1080},
@@ -57,12 +57,13 @@
         facingMode:  'environment',   // 'user'
       },
       audio: true
-    })  // ローカルビデオを取得する（video:ON audio:ON）
-    .then(function (stream) {                     // 成功したら
-      localStream = stream;                       // ストリーム変数に代入（P2Pでの送信用）
-      playVideo(localVideo, stream);              // HTMLのvideoに再生      
+		};
+   navigator.mediaDevices.getUserMedia(constraints)   // ローカルビデオを取得する（video:ON audio:ON）
+    .then((stream) => {                               // 成功したら
+      localStream = stream;                           // ストリーム変数に代入（P2Pでの送信用）
+      playVideo(localVideo, stream);                  // HTMLのvideoに再生      
       console.log('HTML: ローカルカメラを再生しました。');     
-    }).catch(function (error) { // error
+    }).catch((error) => {
       console.error('HTML: カメラが見つかりませんでした。', error);
       return;
     });
@@ -142,16 +143,16 @@
   client.on('message', function(topic, message, packet){  // MQTT にメッセージが来たら呼ばれる
     status.textContent = 'MQTT message recived';
     switch(topic){
-      case buildTopic('offer'):             // "offer"トピックが来たら
+      case buildTopic('offer'):                           // "offer"トピックが来たら
         console.log(`MQTT: Offerトピックを受信したので、Peer接続を開始します。QoS${packet.qos}`);
-        textToReceiveSdp.value = message;   // 受信テキストBOXに表示
-        setOfferText(message);              // 新たなpeer接続を作り。 相手のSDPをセットする
-        makeAnswer();                       // 自分のSDPをanswerにセットする
+        textToReceiveSdp.value = message;                 // 受信テキストBOXに表示
+        setOfferText(message);                            // 新たなpeer接続を作り。 相手のSDPをセットする
+        makeAnswer();                                     // 自分のSDPをanswerにセットする
         break;
-      case buildTopic('answer'):            // "anser"トピックが来たら
+      case buildTopic('answer'):                          // "anser"トピックが来たら
         console.log(`MQTT: answerトピックを受信したので, Peer接続にリモートSDPをセットします。QoS${packet.qos}`);     // [11]
-        textToReceiveSdp.value = message;   // 受信テキストBOXに表示
-        setAnswerText(message);             // 相手SDPをpeerにセットする
+        textToReceiveSdp.value = message;                 // 受信テキストBOXに表示
+        setAnswerText(message);                           // 相手SDPをpeerにセットする
         break;
       default:
         console.warn('MQTT: 知らないトピックを受信しました。');
@@ -307,7 +308,7 @@
       } else {                              // ICE候補の収集が完了した時                // [8]
         let type = peer.localDescription.type;
         let sdp  = peer.localDescription.sdp;
-        console.log('Peer: ICE候補収集完了したので localSDP をシグナリングで相手に送ります. type: ', type);
+        console.log('Peer: ICE候補収集完了したので 最終localSDP をシグナリングで相手に送ります. type: ', type);
         textForSendSdp.value = sdp;         // テキストエリア(送信用)に表示 
         publish(type, sdp);                 // シグナリング(MQTT)にSDPを投稿
       }
