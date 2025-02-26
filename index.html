@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="shortcut icon" href="#">
   <title>WebRTC</title>
+  <script type="text/javascript" src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.js"></script>
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.js"></script>-->
   <script defer="defer" src="e32af6a81c16a82154b7.bundle.js"></script>
@@ -302,12 +303,11 @@
   function prepareNewConnection() {                 // 通信相手ごとに作る
     console.log('Peer: 新たなPeer接続を作ります。');
      var peer = new RTCPeerConnection({             // RTCPeerConnectionを作成 
-//      offerToReceiveAudio: 0,
-//      offerToReceiveVideo: 0,
       iceServers: [
-        {"urls": "stun:stun.l.google.com:19302"},   // STUNサーバー。グローバルアドレスを得る
-        {"urls": "stun:stun1.l.google.com:19302"},
-        {"urls": "stun:stun2.l.google.com:19302"},
+        {urls: 'stun:stun.l.google.com:19302'},     // STUNサーバー。グローバルアドレスを得る
+        {urls: 'stun:stun1.l.google.com:19302'},
+        {urls: 'stun:stun2.l.google.com:19302'},
+//		  {urls: 'turn:turn_server', username:'', credential:''},  // TURNサーバーがあれば指定する
       ],
     });
 
