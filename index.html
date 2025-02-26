@@ -70,8 +70,8 @@
 
   function playVideo(element, stream) { // HTMLのvideoに再生
     console.log('HTML: elemet.srcObject = stream;');      //[17]
-    if(element.srcObject === null)
-      element.srcObject = stream;
+    if(element.srcObject) pauseVideo(element);
+    element.srcObject = stream;
     element.volume = 1; // 0 or 1
     element.play();
   }
