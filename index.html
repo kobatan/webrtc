@@ -308,15 +308,6 @@
       ],
     });
 
-    if (localStream) {                              // P2P用ローカルストリームがあるなら
-      peer.addStream(localStream);                  // ローカルの映像/音声ストリームを追加する  [1]
-      console.log('Peer: Peerにローカル映像を追加しました。');
-    }else{
-//      const transceiver = peer.addTransceiver('video');
-//      transceiver.setDirection('recvonly');         //videoをrecvonlyにする
-      console.warn('Peer: ローカル映像が無いけど進めます。');
-    }
-
     peer.onnegotiationneeded = function(evt) {                                      // [2]　SDPの交換が必要です
       console.log('Peer: onnegotiationneeded() SDPの交換が必要です。');              
     };
@@ -419,6 +410,15 @@
       console.log('Peer: onremovestream()');
       pauseVideo(remoteVideo);
     };
+    
+    if (localStream) {                              // P2P用ローカルストリームがあるなら
+      peer.addStream(localStream);                  // ローカルの映像/音声ストリームを追加する  [1]
+      console.log('Peer: Peerにローカル映像を追加しました。');
+    }else{
+//      const transceiver = peer.addTransceiver('video');
+//      transceiver.setDirection('recvonly');         //videoをrecvonlyにする
+      console.warn('Peer: ローカル映像が無いけど進めます。');
+    }
 
     return peer;
   }
