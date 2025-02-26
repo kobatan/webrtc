@@ -82,7 +82,6 @@
 
   function stopLocalVideo() {
     pauseVideo(localVideo);           // HTMLのvideoを停止
-
     let tracks = localStream.getTracks();
     if (! tracks) {
       console.warn('NO tracks');
@@ -139,7 +138,6 @@
   })
 
   client.on('message', function(topic, message, packet){  // MQTT にメッセージが来たら呼ばれる
-    status.textContent = 'MQTT message recived';
     switch(topic){
       case buildTopic('offer'):                           // "offer"トピックが来たら
         console.log(`MQTT: Offerトピックを受信したので、Peer接続を開始します。QoS${packet.qos}`);
