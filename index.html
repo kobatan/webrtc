@@ -25,6 +25,9 @@
     <video id="local_video" autoplay style="width: 240px; height: 180px; border: 1px solid black;"></video>
     <video id="remote_video" autoplay style="width: 240px; height: 180px; border: 1px solid black;"></video>
   </div>
+  <div>
+    <audio controls id="audio-stream"></audio>
+  </div>
   <p>SDP to send:<br />
     <textarea id="text_for_send_sdp" rows="5" cols="60" readonly="readonly" required></textarea>
   </p>
@@ -287,9 +290,24 @@
 
     // SDPの交換が終わると、P2P通信に相手の映像/音声が含まれていればイベントが発生します。
     peer.ontrack = function(event) {                             // ontrackイベントが発生した時
-    　　console.log(`Peer: peer.ontrack() 映像・音声データが送られて来たので再生します。${event.track.kind}`);   // [16]
-      let stream = event.streams[0];
-      playVideo(remoteVideo, stream);  // 映像を再生する
+  //    event.track.kind == "video"
+      switch(event.track.kind){
+        case 'video':
+          console.log(`Peer: peer.ontrack() 映像データが送られて来たので再生します。`);   // [16]
+          let stream = event.streams[0];
+          playVideo(remoteVideo, stream);  // 映像を再生する
+          break;
+        case 'audio':
+          console.log(`Peer: peer.ontrack() 音声データが送られて来たので再生します。`);   // [16]
+          var el = document.getElementById("audio-stream");
+          var newStream = new MediaStream();
+          newStream.addTrack(event.track);
+          el.srcObject = newStream;
+          el.autoplay = true
+          el.controls = true
+          el.muted = true
+          break;
+      }
     };
    
     peer.addEventListener("removestream", onRemoteStreamRemoved, false);  // ストリームがpeerから削除されたとき
