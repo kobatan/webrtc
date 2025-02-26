@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="ja">
 <head>
- <meta charset="utf-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <link rel="shortcut icon" href="#">
- <title>WebRTC</title>
- <script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.js"></script>
-<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.js"></script>-->
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="#">
+  <title>WebRTC</title>
+<!--  <script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.js"></script>-->
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.js"></script>-->
+  <script defer="defer" src="e32af6a81c16a82154b7.bundle.js"></script>
 <style>
   button {
     width: 10em;
@@ -351,7 +351,7 @@
         textForSendSdp.value = sdp;         // テキストエリア(送信用)に表示 
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
-//        makeAnswer();               // 自分のSDPをanswerにセットする
+        // makeAnswer();               // 自分のSDPをanswerにセットする
         publish(type, sdp);           // シグナリング(MQTT)にSDPを投稿
       }
     };
@@ -362,7 +362,7 @@
           console.log('Peer: oniceconnectionstatechange() ICE接続先調査中');  // [10]
           break;
         case 'connected':
-          console.log('Peer: oniceconnectionstatechange() ICE接続完了');        // [18]
+          console.log('Peer: oniceconnectionstatechange() ICE接続完了');      // [18]
           break;
         case 'disconnected':
           console.log('Peer: oniceconnectionstatechange() ICE切断');  
@@ -401,7 +401,7 @@
     peer.addEventListener("removestream", onRemoteStreamRemoved, false);  // ストリームがpeerから削除されたとき
     function onRemoteStreamRemoved(event) {
       console.log('Peer: リモート映像が無くなりました。');
-      remoteVideo.src = "";                                         // リモートのHTML表示を消す
+      remoteVideo.src = "";                                               // リモートのHTML表示を消す
     }
 
     // --- other events ----
@@ -418,8 +418,8 @@
       peer.addStream(localStream);                  // ローカルの映像/音声ストリームを追加する  [1]
       console.log('Peer: Peerにローカル映像を追加しました。');
     }else{
-//      const transceiver = peer.addTransceiver('video');
-//      transceiver.setDirection('recvonly');         //videoをrecvonlyにする
+      const transceiver = peer.addTransceiver('video');
+      transceiver.setDirection('recvonly');         //videoをrecvonlyにする
       console.warn('Peer: ローカル映像が無いけど進めます。');
     }
 
