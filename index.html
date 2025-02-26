@@ -55,8 +55,7 @@
         facingMode:  'environment',   // 'user'
       },
       audio: true
-　　　};
-
+		};
     console.log('HTML: カメラデバイスを探しています。'); 
     navigator.mediaDevices.getUserMedia(constraints)    // ローカルビデオを取得する
       .then((stream) => {                               // 成功したら
@@ -174,7 +173,7 @@
   function publish(type, text){   // 投稿する
    var topic = buildTopic(type);  // topic名を決める
    client.publish(topic, text);   // topic名で投稿する
-   console.log('MQTT: 投稿した。 トピック名: ' + topic);          //[9]
+   console.log('MQTT: 投稿しました。 トピック名: ' + topic);          //[9]
   }
 
 //======= PeerConnection ================================================
@@ -258,6 +257,8 @@
   function prepareNewConnection() {                 // Peer接続を新たに開始する
     console.log('Peer: 新たなPeer接続を作ります。');
      var peer = new RTCPeerConnection({             // RTCPeerConnectionを作成 
+      offerToReceiveAudio: 1,
+      offerToReceiveVideo: 1,
       iceServers: [
         {urls: 'stun:stun.l.google.com:19302'},     // STUNサーバー。グローバルアドレスを得る
         {urls: 'stun:stun1.l.google.com:19302'},
@@ -276,7 +277,7 @@
     }
 
     peer.onnegotiationneeded = function(evt) {                                      // [2]　SDPの交換が必要です
-      console.log('Peer: onnegotiationneeded() SDPの交換が必要です。');              
+      console.log('Peer: SDPの交換が必要です。');              
     };
 
     peer.onicecandidate = function (evt) { // ICE候補が収集される度に呼び出される。
@@ -285,7 +286,7 @@
       } else {                              // ICE候補の収集が完了した時                // [8]
         let type = peer.localDescription.type;
         let sdp  = peer.localDescription.sdp;
-        console.log('Peer: ICE候補収集完了したので 最終localSDP をシグナリングで相手に送ります. type: ', type);
+        console.log('Peer: ICE候補収集完了。最終localSDPをシグナリングで相手に送ります. type: ', type);
         textForSendSdp.value = sdp;         // テキストエリア(送信用)に表示 
         publish(type, sdp);                 // シグナリング(MQTT)にSDPを投稿
       }
@@ -294,10 +295,10 @@
     peer.oniceconnectionstatechange = function() {
       switch(peer.iceConnectionState){
         case 'connected':
-          console.log('Peer: oniceconnectionstatechange() ICE接続完了');
+          console.log('Peer: ICE接続完了');
           break;   
         case 'disconnected':
-          console.log('Peer: oniceconnectionstatechange() ICE切断');  
+          console.log('Peer: ICE切断されました。');  
           hangUp();
           break;
       }
@@ -305,7 +306,6 @@
 
     // SDPの交換が終わると、P2P通信に相手の映像/音声が含まれていればイベントが発生します。
     peer.ontrack = function(event) {                             // ontrackイベントが発生した時
-  //    event.track.kind == "video"
       switch(event.track.kind){
         case 'video':
           console.log(`Peer: peer.ontrack() 映像データが送られて来たので再生します。`);   // [16]
